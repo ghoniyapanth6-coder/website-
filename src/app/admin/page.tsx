@@ -10,6 +10,7 @@ import {
   Briefcase,
   Award,
   MessageSquare,
+  HelpCircle,
   Settings,
   Search,
   Plus,
@@ -22,6 +23,7 @@ import {
   Filter,
   Eye,
   Trash2,
+  Edit3,
   Star,
   ShieldCheck,
   Globe,
@@ -37,11 +39,16 @@ import {
   Phone,
   MapPin,
   ExternalLink,
-  Sliders,
   DollarSign,
   Gauge,
   Sparkles,
   ChevronLeft,
+  Code,
+  AlertTriangle,
+  Lightbulb,
+  Info,
+  CheckSquare,
+  BookOpen,
 } from "lucide-react";
 
 import {
@@ -51,30 +58,43 @@ import {
   INITIAL_PLANS,
   INITIAL_PROJECTS,
   INITIAL_CLIENT_REVIEWS,
+  INITIAL_FAQS,
   INITIAL_AGENCY_SETTINGS,
   INITIAL_KPI_STATS,
   INQUIRY_STATUS_CONFIG,
   MEMO_STATUS_CONFIG,
   PLAN_STATUS_CONFIG,
   SERVICE_STATUS_CONFIG,
+  FAQ_CATEGORY_CONFIG,
+  FAQ_PAGE_CONFIG,
+  FAQ_STATUS_CONFIG,
   AdminInquiry,
   AdminJournalMemo,
   AdminService,
   AdminPlan,
   AdminPortfolioProject,
   AdminClientReview,
+  AdminFaqItem,
   AdminAgencySettings,
   AdminKpiStats,
   InquiryStatus,
   MemoStatus,
   PlanStatus,
   ServiceStatus,
+  FaqCategory,
+  FaqTargetPage,
+  FaqStatus,
+  JournalArticleSection,
+  JournalArticleCallout,
+  JournalArticleCodeBlock,
+  JournalArticleMetric,
 } from "@/data/adminMockData";
 
 type AdminTab =
   | "overview"
   | "inquiries"
   | "memos"
+  | "faqs"
   | "services"
   | "plans"
   | "projects"
@@ -100,6 +120,7 @@ export default function AdminPage() {
   // Data States
   const [inquiries, setInquiries] = useState<AdminInquiry[]>(INITIAL_INQUIRIES);
   const [memos, setMemos] = useState<AdminJournalMemo[]>(INITIAL_JOURNAL_MEMOS);
+  const [faqs, setFaqs] = useState<AdminFaqItem[]>(INITIAL_FAQS);
   const [services, setServices] = useState<AdminService[]>(INITIAL_SERVICES);
   const [plans, setPlans] = useState<AdminPlan[]>(INITIAL_PLANS);
   const [projects, setProjects] = useState<AdminPortfolioProject[]>(INITIAL_PROJECTS);
@@ -107,52 +128,85 @@ export default function AdminPage() {
   const [agencySettings, setAgencySettings] = useState<AdminAgencySettings>(INITIAL_AGENCY_SETTINGS);
   const [kpiStats, setKpiStats] = useState<AdminKpiStats>(INITIAL_KPI_STATS);
 
-  // Global & Tab Filters
-  const [globalSearch, setGlobalSearch] = useState("");
+  // Inquiries Filters & Modals
   const [inquirySearch, setInquirySearch] = useState("");
   const [inquiryStatusFilter, setInquiryStatusFilter] = useState<string>("ALL");
-  const [inquiryPriorityFilter, setInquiryPriorityFilter] = useState<string>("ALL");
+  const [selectedInquiry, setSelectedInquiry] = useState<AdminInquiry | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [isNewInquiryModalOpen, setIsNewInquiryModalOpen] = useState(false);
 
+  // Journal Memos Filters & Studio Modal
   const [memoSearch, setMemoSearch] = useState("");
   const [memoCategoryFilter, setMemoCategoryFilter] = useState<string>("ALL");
   const [memoStatusFilter, setMemoStatusFilter] = useState<string>("ALL");
+  const [isMemoStudioOpen, setIsMemoStudioOpen] = useState(false);
+  const [memoComposerTab, setMemoComposerTab] = useState<"meta" | "author" | "content" | "preview">("meta");
+  const [memoFormId, setMemoFormId] = useState<string | null>(null); // null = new, string = editing
 
+  // Memo Studio Form State
+  const [memoForm, setMemoForm] = useState({
+    title: "",
+    subtitle: "",
+    category: "ARCHITECTURE",
+    readTime: "7 MIN READ",
+    slug: "",
+    tags: "Next.js 14, Architecture, React 19",
+    status: "PUBLISHED" as MemoStatus,
+    authorName: "Marcus Vance",
+    authorRole: "Lead System Architect",
+    authorHandle: "@marcusvance",
+    executiveSummary: "",
+    takeaway1: "Zero client-side hydration tax with React Server Components.",
+    takeaway2: "Sub-400ms Largest Contentful Paint (LCP) globally via edge caching.",
+    takeaway3: "100% intellectual property and TypeScript source handover.",
+    metricLabel1: "LCP SPEED",
+    metricValue1: "-78%",
+    metricLabel2: "LIGHTHOUSE SLA",
+    metricValue2: "100/100",
+    sectionHeading: "1. ARCHITECTURAL FOUNDATION & PARADIGM SHIFT",
+    sectionContent:
+      "When scaling mission-critical commercial web applications, reliance on monolithic dynamic servers introduces cascading latency bottlenecks. By migrating to Next.js 14 Streaming Server Components, we eliminate client-side JavaScript execution overhead.",
+    codeFilename: "src/app/api/route.ts",
+    codeLanguage: "typescript",
+    codeSnippet: `export const runtime = 'edge';\n\nexport async function GET(req: Request) {\n  return Response.json({ status: 'ok', latencyMs: 8 });\n}`,
+    calloutType: "pro-tip" as "note" | "warning" | "pro-tip",
+    calloutTitle: "EDGE COMPLIANCE DIRECTIVE",
+    calloutBody: "Ensure all database queries pass through PgBouncer connection multiplexers to prevent pool exhaustion.",
+  });
+
+  // FAQ Manager Filters & Modal
+  const [faqSearch, setFaqSearch] = useState("");
+  const [faqCategoryFilter, setFaqCategoryFilter] = useState<string>("ALL");
+  const [faqPageFilter, setFaqPageFilter] = useState<string>("ALL");
+  const [faqStatusFilter, setFaqStatusFilter] = useState<string>("ALL");
+  const [isFaqModalOpen, setIsFaqModalOpen] = useState(false);
+  const [editingFaqId, setEditingFaqId] = useState<string | null>(null);
+  const [faqForm, setFaqForm] = useState<{
+    question: string;
+    answer: string;
+    category: FaqCategory;
+    targetPage: FaqTargetPage;
+    highlightBadge: string;
+    status: FaqStatus;
+  }>({
+    question: "",
+    answer: "",
+    category: "GENERAL",
+    targetPage: "HOME",
+    highlightBadge: "2-4 WEEK SPRINTS",
+    status: "ACTIVE",
+  });
+
+  // Services View Mode
   const [servicesViewMode, setServicesViewMode] = useState<"cards" | "table">("cards");
-  const [projectFilterCategory, setProjectFilterCategory] = useState<string>("ALL");
 
-  // Modals State
-  const [selectedInquiry, setSelectedInquiry] = useState<AdminInquiry | null>(null);
-  const [replyText, setReplyText] = useState("");
-
-  const [isNewInquiryModalOpen, setIsNewInquiryModalOpen] = useState(false);
-  const [isNewMemoModalOpen, setIsNewMemoModalOpen] = useState(false);
-  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
+  // Plans Slots & Price Edit Modal
   const [isPriceEditModalOpen, setIsPriceEditModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<AdminPlan | null>(null);
   const [tempPriceInput, setTempPriceInput] = useState("");
 
-  // Forms State
-  const [newInquiryForm, setNewInquiryForm] = useState({
-    name: "",
-    email: "",
-    company: "",
-    service: "Next.js 14 Web App",
-    budget: "$10K - $25K",
-    timeline: "Standard 3-4 Weeks",
-    message: "",
-    priority: "MEDIUM" as "HIGH" | "MEDIUM" | "LOW",
-  });
-
-  const [newMemoForm, setNewMemoForm] = useState({
-    title: "",
-    category: "ARCHITECTURE",
-    readTime: "6 MIN READ",
-    tags: "Next.js 14, Architecture, React 19",
-    excerpt: "",
-    authorName: "Marcus Vance",
-    status: "PUBLISHED" as MemoStatus,
-  });
-
+  // Projects Modal
+  const [isNewProjectModalOpen, setIsNewProjectModalOpen] = useState(false);
   const [newProjectForm, setNewProjectForm] = useState({
     title: "",
     client: "",
@@ -165,10 +219,49 @@ export default function AdminPage() {
     status: "COMPLETED" as "COMPLETED" | "IN_PROGRESS",
   });
 
-  // Toast Notifications
+  // Testimonials Modal & Edit State
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [reviewForm, setReviewForm] = useState<{
+    clientName: string;
+    role: string;
+    company: string;
+    rating: number;
+    quote: string;
+    contractId: string;
+    metricBadge: string;
+    verified: boolean;
+  }>({
+    clientName: "",
+    role: "VP of Engineering",
+    company: "",
+    rating: 5,
+    quote: "",
+    contractId: "CLV-2026",
+    metricBadge: "+340% CONVERSION",
+    verified: true,
+  });
+
+  // New Inquiry Form State
+  const [newInquiryForm, setNewInquiryForm] = useState({
+    name: "",
+    email: "",
+    company: "",
+    service: "Next.js 14 Web App",
+    budget: "$10K - $25K",
+    timeline: "Standard 3-4 Weeks",
+    message: "",
+    priority: "MEDIUM" as "HIGH" | "MEDIUM" | "LOW",
+  });
+
+  // Toast Stack
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = (title: string, description?: string, type: "success" | "info" | "warning" = "success") => {
+  const showToast = (
+    title: string,
+    description?: string,
+    type: "success" | "info" | "warning" = "success"
+  ) => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, title, description, type }]);
     setTimeout(() => {
@@ -205,12 +298,10 @@ export default function AdminPage() {
 
       const matchesStatus =
         inquiryStatusFilter === "ALL" || inq.status === inquiryStatusFilter;
-      const matchesPriority =
-        inquiryPriorityFilter === "ALL" || inq.priority === inquiryPriorityFilter;
 
-      return matchesSearch && matchesStatus && matchesPriority;
+      return matchesSearch && matchesStatus;
     });
-  }, [inquiries, inquirySearch, inquiryStatusFilter, inquiryPriorityFilter]);
+  }, [inquiries, inquirySearch, inquiryStatusFilter]);
 
   // Filtered Memos
   const filteredMemos = useMemo(() => {
@@ -218,6 +309,7 @@ export default function AdminPage() {
       const matchesSearch =
         memo.title.toLowerCase().includes(memoSearch.toLowerCase()) ||
         memo.excerpt.toLowerCase().includes(memoSearch.toLowerCase()) ||
+        (memo.subtitle && memo.subtitle.toLowerCase().includes(memoSearch.toLowerCase())) ||
         memo.tags.some((t) => t.toLowerCase().includes(memoSearch.toLowerCase()));
 
       const matchesCategory =
@@ -228,6 +320,25 @@ export default function AdminPage() {
       return matchesSearch && matchesCategory && matchesStatus;
     });
   }, [memos, memoSearch, memoCategoryFilter, memoStatusFilter]);
+
+  // Filtered FAQs
+  const filteredFaqs = useMemo(() => {
+    return faqs.filter((faq) => {
+      const matchesSearch =
+        faq.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
+        faq.answer.toLowerCase().includes(faqSearch.toLowerCase()) ||
+        faq.highlightBadge.toLowerCase().includes(faqSearch.toLowerCase());
+
+      const matchesCategory =
+        faqCategoryFilter === "ALL" || faq.category === faqCategoryFilter;
+      const matchesPage =
+        faqPageFilter === "ALL" || faq.targetPage === faqPageFilter;
+      const matchesStatus =
+        faqStatusFilter === "ALL" || faq.status === faqStatusFilter;
+
+      return matchesSearch && matchesCategory && matchesPage && matchesStatus;
+    });
+  }, [faqs, faqSearch, faqCategoryFilter, faqPageFilter, faqStatusFilter]);
 
   // Unread Inquiries Count
   const unreadCount = useMemo(() => {
@@ -292,7 +403,187 @@ export default function AdminPage() {
     showToast("New Lead Created", `Registered inquiry #${id} for ${newEntry.name}.`);
   };
 
-  // Handlers for Memos
+  // Handlers for Memo Studio (Full In-depth Composer)
+  const openMemoStudioForNew = () => {
+    setMemoFormId(null);
+    setMemoComposerTab("meta");
+    setMemoForm({
+      title: "",
+      subtitle: "",
+      category: "ARCHITECTURE",
+      readTime: "7 MIN READ",
+      slug: "",
+      tags: "Next.js 14, Architecture, React 19",
+      status: "PUBLISHED",
+      authorName: "Marcus Vance",
+      authorRole: "Lead System Architect",
+      authorHandle: "@marcusvance",
+      executiveSummary: "",
+      takeaway1: "Zero client-side hydration tax with React Server Components.",
+      takeaway2: "Sub-400ms Largest Contentful Paint (LCP) globally via edge caching.",
+      takeaway3: "100% intellectual property and TypeScript source handover.",
+      metricLabel1: "LCP SPEED",
+      metricValue1: "-78%",
+      metricLabel2: "LIGHTHOUSE SLA",
+      metricValue2: "100/100",
+      sectionHeading: "1. ARCHITECTURAL FOUNDATION & PARADIGM SHIFT",
+      sectionContent:
+        "When scaling mission-critical commercial web applications, reliance on monolithic dynamic servers introduces cascading latency bottlenecks. By migrating to Next.js 14 Streaming Server Components, we eliminate client-side JavaScript execution overhead.",
+      codeFilename: "src/app/api/route.ts",
+      codeLanguage: "typescript",
+      codeSnippet: `export const runtime = 'edge';\n\nexport async function GET(req: Request) {\n  return Response.json({ status: 'ok', latencyMs: 8 });\n}`,
+      calloutType: "pro-tip",
+      calloutTitle: "EDGE COMPLIANCE DIRECTIVE",
+      calloutBody: "Ensure all database queries pass through PgBouncer connection multiplexers to prevent pool exhaustion.",
+    });
+    setIsMemoStudioOpen(true);
+  };
+
+  const openMemoStudioForEdit = (memo: AdminJournalMemo) => {
+    setMemoFormId(memo.id);
+    setMemoComposerTab("meta");
+    const firstSection = memo.sections?.[0];
+    setMemoForm({
+      title: memo.title,
+      subtitle: memo.subtitle || memo.excerpt,
+      category: memo.category,
+      readTime: memo.readTime,
+      slug: memo.slug,
+      tags: memo.tags.join(", "),
+      status: memo.status,
+      authorName: memo.author?.name || memo.authorName || "Marcus Vance",
+      authorRole: memo.author?.role || "Lead System Architect",
+      authorHandle: memo.author?.handle || "@marcusvance",
+      executiveSummary: memo.executiveSummary || memo.excerpt,
+      takeaway1: memo.keyTakeaways?.[0] || "Zero client-side hydration tax.",
+      takeaway2: memo.keyTakeaways?.[1] || "Sub-400ms Largest Contentful Paint (LCP).",
+      takeaway3: memo.keyTakeaways?.[2] || "100% source code ownership.",
+      metricLabel1: memo.metrics?.[0]?.label || "PERFORMANCE",
+      metricValue1: memo.metrics?.[0]?.value || "100/100",
+      metricLabel2: memo.metrics?.[1]?.label || "METRIC",
+      metricValue2: memo.metrics?.[1]?.value || "+280%",
+      sectionHeading: firstSection?.heading || "1. ARCHITECTURAL DEEP DIVE",
+      sectionContent: firstSection?.content?.[0] || memo.excerpt,
+      codeFilename: firstSection?.codeBlock?.filename || "src/lib/cache.ts",
+      codeLanguage: firstSection?.codeBlock?.language || "typescript",
+      codeSnippet:
+        firstSection?.codeBlock?.code ||
+        `export const cacheConfig = {\n  revalidate: 3600,\n  tags: ['articles'],\n};`,
+      calloutType: firstSection?.callout?.type || "note",
+      calloutTitle: firstSection?.callout?.title || "SYSTEM NOTICE",
+      calloutBody: firstSection?.callout?.body || "Performance is verified under strict SLA.",
+    });
+    setIsMemoStudioOpen(true);
+  };
+
+  const handleSaveMemoStudio = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!memoForm.title.trim()) {
+      showToast("Validation Error", "Article title is required.", "warning");
+      return;
+    }
+
+    const tagsArray = memoForm.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    const slug =
+      memoForm.slug.trim() ||
+      memoForm.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+
+    const metrics: JournalArticleMetric[] = [
+      { label: memoForm.metricLabel1 || "SPEED SLA", value: memoForm.metricValue1 || "100/100" },
+      { label: memoForm.metricLabel2 || "OUTCOME", value: memoForm.metricValue2 || "+100%" },
+    ];
+
+    const takeaways = [memoForm.takeaway1, memoForm.takeaway2, memoForm.takeaway3].filter(
+      Boolean
+    );
+
+    const section: JournalArticleSection = {
+      id: "sec-01",
+      heading: memoForm.sectionHeading,
+      content: [memoForm.sectionContent],
+      callout: {
+        type: memoForm.calloutType,
+        title: memoForm.calloutTitle,
+        body: memoForm.calloutBody,
+      },
+      codeBlock: {
+        filename: memoForm.codeFilename,
+        language: memoForm.codeLanguage,
+        code: memoForm.codeSnippet,
+      },
+    };
+
+    if (memoFormId) {
+      // Update existing
+      setMemos((prev) =>
+        prev.map((m) => {
+          if (m.id === memoFormId) {
+            return {
+              ...m,
+              title: memoForm.title.toUpperCase(),
+              subtitle: memoForm.subtitle,
+              category: memoForm.category,
+              readTime: memoForm.readTime,
+              slug,
+              tags: tagsArray,
+              status: memoForm.status,
+              author: {
+                name: memoForm.authorName,
+                role: memoForm.authorRole,
+                handle: memoForm.authorHandle,
+              },
+              authorName: memoForm.authorName,
+              executiveSummary: memoForm.executiveSummary,
+              keyTakeaways: takeaways,
+              metrics,
+              sections: [section, ...(m.sections?.slice(1) || [])],
+            };
+          }
+          return m;
+        })
+      );
+      showToast("Article Updated", `"${memoForm.title}" saved to Journal CMS.`);
+    } else {
+      // Create new
+      const newId = `MEMO-00${memos.length + 1}`;
+      const newMemo: AdminJournalMemo = {
+        id: newId,
+        title: memoForm.title.toUpperCase(),
+        subtitle: memoForm.subtitle,
+        category: memoForm.category,
+        readTime: memoForm.readTime,
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        }).toUpperCase(),
+        excerpt: memoForm.executiveSummary || memoForm.subtitle || memoForm.title,
+        slug,
+        tags: tagsArray.length > 0 ? tagsArray : ["Next.js 14", "Architecture"],
+        status: memoForm.status,
+        views: 0,
+        featured: false,
+        author: {
+          name: memoForm.authorName,
+          role: memoForm.authorRole,
+          handle: memoForm.authorHandle,
+        },
+        authorName: memoForm.authorName,
+        executiveSummary: memoForm.executiveSummary,
+        keyTakeaways: takeaways,
+        metrics,
+        sections: [section],
+      };
+      setMemos([newMemo, ...memos]);
+      showToast("Journal Memo Created", `"${newMemo.title}" published with full live preview.`);
+    }
+
+    setIsMemoStudioOpen(false);
+  };
+
   const toggleMemoStatus = (id: string) => {
     setMemos((prev) =>
       prev.map((memo) => {
@@ -310,50 +601,101 @@ export default function AdminPage() {
     );
   };
 
-  const handleCreateMemo = (e: React.FormEvent) => {
+  const deleteMemo = (id: string) => {
+    setMemos((prev) => prev.filter((m) => m.id !== id));
+    showToast("Memo Removed", `Journal entry #${id} deleted.`, "info");
+  };
+
+  // Handlers for FAQ Manager
+  const openFaqModalForNew = () => {
+    setEditingFaqId(null);
+    setFaqForm({
+      question: "",
+      answer: "",
+      category: "GENERAL",
+      targetPage: "HOME",
+      highlightBadge: "2-4 WEEK SPRINTS",
+      status: "ACTIVE",
+    });
+    setIsFaqModalOpen(true);
+  };
+
+  const openFaqModalForEdit = (item: AdminFaqItem) => {
+    setEditingFaqId(item.id);
+    setFaqForm({
+      question: item.question,
+      answer: item.answer,
+      category: item.category,
+      targetPage: item.targetPage,
+      highlightBadge: item.highlightBadge,
+      status: item.status,
+    });
+    setIsFaqModalOpen(true);
+  };
+
+  const handleSaveFaq = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMemoForm.title || !newMemoForm.excerpt) {
-      showToast("Validation Error", "Title and excerpt are required.", "warning");
+    if (!faqForm.question.trim() || !faqForm.answer.trim()) {
+      showToast("Validation Error", "Question and answer are required.", "warning");
       return;
     }
-    const id = `MEMO-00${memos.length + 1}`;
-    const slug = newMemoForm.title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)+/g, "");
-    const tags = newMemoForm.tags.split(",").map((t) => t.trim()).filter(Boolean);
 
-    const newMemo: AdminJournalMemo = {
-      id,
-      title: newMemoForm.title.toUpperCase(),
-      slug,
-      category: newMemoForm.category,
-      readTime: newMemoForm.readTime,
-      date: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }).toUpperCase(),
-      excerpt: newMemoForm.excerpt,
-      tags: tags.length > 0 ? tags : ["Architecture", "Next.js 14"],
-      status: newMemoForm.status,
-      views: 0,
-      featured: false,
-      authorName: newMemoForm.authorName,
-    };
+    if (editingFaqId) {
+      setFaqs((prev) =>
+        prev.map((f) =>
+          f.id === editingFaqId
+            ? {
+                ...f,
+                question: faqForm.question,
+                answer: faqForm.answer,
+                category: faqForm.category,
+                targetPage: faqForm.targetPage,
+                highlightBadge: faqForm.highlightBadge,
+                status: faqForm.status,
+              }
+            : f
+        )
+      );
+      showToast("FAQ Updated", `Item #${editingFaqId} synchronized.`);
+    } else {
+      const pagePrefix = faqForm.targetPage.substring(0, 3);
+      const newId = `FAQ-${pagePrefix}-${(faqs.length + 1).toString().padStart(2, "0")}`;
+      const newFaq: AdminFaqItem = {
+        id: newId,
+        question: faqForm.question,
+        answer: faqForm.answer,
+        category: faqForm.category,
+        targetPage: faqForm.targetPage,
+        highlightBadge: faqForm.highlightBadge,
+        status: faqForm.status,
+        order: faqs.length + 1,
+      };
+      setFaqs([newFaq, ...faqs]);
+      showToast("New FAQ Created", `Registered FAQ #${newId} for ${newFaq.targetPage} page.`);
+    }
+    setIsFaqModalOpen(false);
+  };
 
-    setMemos([newMemo, ...memos]);
-    setIsNewMemoModalOpen(false);
-    setNewMemoForm({
-      title: "",
-      category: "ARCHITECTURE",
-      readTime: "6 MIN READ",
-      tags: "Next.js 14, Architecture, React 19",
-      excerpt: "",
-      authorName: "Marcus Vance",
-      status: "PUBLISHED",
-    });
-    showToast("Journal Memo Created", `"${newMemo.title}" added to CMS state.`);
+  const toggleFaqStatus = (id: string) => {
+    setFaqs((prev) =>
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextStatus: FaqStatus =
+            item.status === "ACTIVE" ? "HIDDEN" : "ACTIVE";
+          showToast(
+            `FAQ ${nextStatus === "ACTIVE" ? "Activated" : "Hidden"}`,
+            `FAQ #${id} is now ${nextStatus}.`
+          );
+          return { ...item, status: nextStatus };
+        }
+        return item;
+      })
+    );
+  };
+
+  const deleteFaq = (id: string) => {
+    setFaqs((prev) => prev.filter((f) => f.id !== id));
+    showToast("FAQ Removed", `FAQ #${id} deleted from studio repository.`, "info");
   };
 
   // Handlers for Services
@@ -446,7 +788,97 @@ export default function AdminPage() {
     showToast("Portfolio Project Added", `"${newPrj.title}" is now showcased.`);
   };
 
-  // Handlers for Reviews
+  // Handlers for Testimonials
+  const openReviewModalForNew = () => {
+    setEditingReviewId(null);
+    setReviewForm({
+      clientName: "",
+      role: "VP of Engineering",
+      company: "",
+      rating: 5,
+      quote: "",
+      contractId: `CLV-${Math.floor(1000 + Math.random() * 9000)}`,
+      metricBadge: "+340% CONVERSION",
+      verified: true,
+    });
+    setIsReviewModalOpen(true);
+  };
+
+  const openReviewModalForEdit = (rev: AdminClientReview) => {
+    setEditingReviewId(rev.id);
+    setReviewForm({
+      clientName: rev.clientName,
+      role: rev.role,
+      company: rev.company,
+      rating: rev.rating,
+      quote: rev.quote,
+      contractId: rev.contractId,
+      metricBadge: rev.metricBadge,
+      verified: rev.verified,
+    });
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSaveReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewForm.clientName.trim() || !reviewForm.quote.trim()) {
+      showToast("Validation Error", "Client name and quote are required.", "warning");
+      return;
+    }
+
+    const initials = reviewForm.clientName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+
+    if (editingReviewId) {
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === editingReviewId
+            ? {
+                ...r,
+                clientName: reviewForm.clientName,
+                role: reviewForm.role,
+                company: reviewForm.company,
+                rating: reviewForm.rating,
+                quote: reviewForm.quote,
+                contractId: reviewForm.contractId,
+                metricBadge: reviewForm.metricBadge,
+                verified: reviewForm.verified,
+                avatarInitials: initials,
+              }
+            : r
+        )
+      );
+      showToast("Testimonial Updated", `Review from ${reviewForm.clientName} updated.`);
+    } else {
+      const newRev: AdminClientReview = {
+        id: `REV-0${reviews.length + 1}`,
+        clientName: reviewForm.clientName,
+        role: reviewForm.role,
+        company: reviewForm.company,
+        rating: reviewForm.rating,
+        quote: reviewForm.quote,
+        date: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        }).toUpperCase(),
+        verified: reviewForm.verified,
+        avatarInitials: initials,
+        avatarBg: "bg-accent-yellow text-ink-black",
+        contractId: reviewForm.contractId,
+        metricBadge: reviewForm.metricBadge,
+      };
+      setReviews([newRev, ...reviews]);
+      showToast("Testimonial Added", `Added 5-star review from ${newRev.clientName}.`);
+    }
+
+    setIsReviewModalOpen(false);
+  };
+
   const toggleReviewVerified = (id: string) => {
     setReviews((prev) =>
       prev.map((rev) => {
@@ -461,6 +893,11 @@ export default function AdminPage() {
         return rev;
       })
     );
+  };
+
+  const deleteReview = (id: string) => {
+    setReviews((prev) => prev.filter((r) => r.id !== id));
+    showToast("Testimonial Removed", "Review deleted.", "info");
   };
 
   // Handlers for Settings
@@ -512,7 +949,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-2 bg-[#F7F5EE] border-2 border-ink-black px-3 py-1 shadow-[2px_2px_0px_#000000]">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span className="font-bold text-neutral-800 tracking-wider">
-              {currentTime || "2026-11-19 16:40:00 UTC"}
+              {currentTime || "2026-11-19 18:10:00 UTC"}
             </span>
           </div>
 
@@ -567,7 +1004,7 @@ export default function AdminPage() {
       </header>
 
       {/* ===================================================================== */}
-      {/* 2. MAIN LAYOUT: SIDEBAR + CONTENT CONTAINER                          */}
+      {/* 2. MAIN WORKSPACE: SIDEBAR + CONTENT CONTAINER                        */}
       {/* ===================================================================== */}
       <div className="flex-1 flex overflow-hidden">
         {/* =================================================================== */}
@@ -625,6 +1062,13 @@ export default function AdminPage() {
                 badgeColor: "bg-accent-teal text-ink-black",
               },
               {
+                id: "faqs",
+                label: "FAQ Manager",
+                icon: HelpCircle,
+                badge: `${faqs.length}`,
+                badgeColor: "bg-accent-yellow text-ink-black",
+              },
+              {
                 id: "services",
                 label: "Services Matrix",
                 icon: Zap,
@@ -679,7 +1123,11 @@ export default function AdminPage() {
                   `}
                   title={tab.label}
                 >
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${isActive ? "text-ink-black stroke-[2.5]" : "text-neutral-600"}`} />
+                  <Icon
+                    className={`w-4 h-4 flex-shrink-0 ${
+                      isActive ? "text-ink-black stroke-[2.5]" : "text-neutral-600"
+                    }`}
+                  />
                   {!sidebarCollapsed && (
                     <div className="flex-1 flex items-center justify-between overflow-hidden">
                       <span className="truncate text-left">{tab.label}</span>
@@ -750,7 +1198,7 @@ export default function AdminPage() {
           {/* ================================================================= */}
           {activeTab === "overview" && (
             <div className="space-y-6">
-              {/* Welcome Banner with Swiss Striping */}
+              {/* Welcome Banner */}
               <div className="bg-white border-2 border-ink-black p-5 sm:p-6 shadow-[5px_5px_0px_#000000] relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-36 h-36 bg-accent-yellow -mr-16 -mt-16 rotate-45 border-b-2 border-ink-black pointer-events-none hidden sm:block" />
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -784,11 +1232,11 @@ export default function AdminPage() {
                       Triage Leads ({unreadCount})
                     </button>
                     <button
-                      onClick={() => setIsNewMemoModalOpen(true)}
+                      onClick={openMemoStudioForNew}
                       className="px-4 py-2 bg-white hover:bg-neutral-100 border-2 border-ink-black font-mono font-bold text-xs uppercase shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5"
                     >
                       <Plus className="w-4 h-4" />
-                      Draft Memo
+                      Journal Studio
                     </button>
                   </div>
                 </div>
@@ -1172,7 +1620,6 @@ export default function AdminPage() {
                               inq.unread ? "bg-amber-50/50 font-medium" : ""
                             }`}
                           >
-                            {/* ID / Date */}
                             <td className="py-3 px-4 border-r border-neutral-200 font-mono">
                               <div className="flex items-center gap-1.5 font-bold">
                                 {inq.id}
@@ -1185,7 +1632,6 @@ export default function AdminPage() {
                               </div>
                             </td>
 
-                            {/* Client / Company */}
                             <td className="py-3 px-4 border-r border-neutral-200">
                               <div className="font-bold text-sm">{inq.name}</div>
                               <div className="text-neutral-500 font-mono text-[11px]">
@@ -1193,20 +1639,17 @@ export default function AdminPage() {
                               </div>
                             </td>
 
-                            {/* Service */}
                             <td className="py-3 px-4 border-r border-neutral-200 font-mono">
                               <span className="bg-neutral-100 px-2 py-0.5 border border-neutral-300 font-bold">
                                 {inq.service}
                               </span>
                             </td>
 
-                            {/* Budget / Timeline */}
                             <td className="py-3 px-4 border-r border-neutral-200 font-mono">
                               <div className="font-black text-ink-black">{inq.budget}</div>
                               <div className="text-[10px] text-neutral-500">{inq.timeline}</div>
                             </td>
 
-                            {/* Priority */}
                             <td className="py-3 px-4 border-r border-neutral-200 text-center font-mono">
                               <span
                                 className={`text-[10px] font-black px-2 py-0.5 border border-ink-black ${
@@ -1221,7 +1664,6 @@ export default function AdminPage() {
                               </span>
                             </td>
 
-                            {/* Status */}
                             <td className="py-3 px-4 border-r border-neutral-200 font-mono">
                               <div className="relative inline-block">
                                 <select
@@ -1240,7 +1682,6 @@ export default function AdminPage() {
                               </div>
                             </td>
 
-                            {/* Actions */}
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5 font-mono">
                                 <button
@@ -1271,7 +1712,7 @@ export default function AdminPage() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB 3: 📝 JOURNAL & MEMOS                                         */}
+          {/* TAB 3: 📝 JOURNAL & MEMOS STUDIO                                 */}
           {/* ================================================================= */}
           {activeTab === "memos" && (
             <div className="space-y-6">
@@ -1281,23 +1722,23 @@ export default function AdminPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       <h1 className="text-2xl font-headline font-black uppercase">
-                        Journal & Technical Memos
+                        Journal Memos & Technical Editorial Studio
                       </h1>
                       <span className="font-mono text-xs bg-accent-teal px-2 py-0.5 border border-ink-black font-black">
                         {memos.length} ARTICLES
                       </span>
                     </div>
                     <p className="text-neutral-600 text-xs mt-1">
-                      Manage published thought leadership, architectural benchmarks, and SEO ranking assets.
+                      Author, edit, and audit deep-dive architectural engineering memos with full `/journal` parity and interactive live preview.
                     </p>
                   </div>
 
                   <button
-                    onClick={() => setIsNewMemoModalOpen(true)}
+                    onClick={openMemoStudioForNew}
                     className="self-start md:self-auto px-4 py-2 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-mono font-black text-xs uppercase shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4 stroke-[3]" />
-                    Create Article
+                    Compose Full Memo
                   </button>
                 </div>
 
@@ -1307,7 +1748,7 @@ export default function AdminPage() {
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                     <input
                       type="text"
-                      placeholder="Search title, excerpt, tags..."
+                      placeholder="Search title, subtitle, excerpt, tags..."
                       value={memoSearch}
                       onChange={(e) => setMemoSearch(e.target.value)}
                       className="w-full pl-9 pr-3 py-1.5 bg-[#F7F5EE] border-2 border-ink-black text-xs font-mono focus:outline-none focus:bg-white"
@@ -1333,8 +1774,8 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Memos List */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Memos List Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {filteredMemos.map((memo) => {
                   const statusConfig = MEMO_STATUS_CONFIG[memo.status];
                   return (
@@ -1354,9 +1795,21 @@ export default function AdminPage() {
                           {memo.title}
                         </h3>
 
-                        <p className="text-xs text-neutral-600 line-clamp-3">
+                        {memo.subtitle && (
+                          <div className="text-xs font-mono text-neutral-600 line-clamp-2 italic">
+                            {memo.subtitle}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-neutral-700 line-clamp-3">
                           {memo.excerpt}
                         </p>
+
+                        {/* Author info pill */}
+                        <div className="flex items-center justify-between font-mono text-[11px] pt-1 text-neutral-600 border-t border-neutral-100">
+                          <span>By {memo.author?.name || memo.authorName || "Marcus Vance"}</span>
+                          <span>{memo.date}</span>
+                        </div>
 
                         <div className="flex flex-wrap gap-1 pt-1">
                           {memo.tags.map((tag) => (
@@ -1385,14 +1838,31 @@ export default function AdminPage() {
                           )}
                         </div>
 
-                        <Link
-                          href={`/journal/${memo.slug}`}
-                          target="_blank"
-                          className="font-bold text-neutral-700 hover:text-ink-black flex items-center gap-1 hover:underline"
-                        >
-                          <span>Read</span>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openMemoStudioForEdit(memo)}
+                            className="px-2.5 py-1 bg-white hover:bg-neutral-100 border border-ink-black font-bold text-[11px] flex items-center gap-1 shadow-[1px_1px_0px_#000000]"
+                            title="Edit Full Memo in Studio"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                            <span>Edit Studio</span>
+                          </button>
+                          <Link
+                            href={`/journal/${memo.slug}`}
+                            target="_blank"
+                            className="p-1 hover:bg-neutral-100 border border-neutral-300 text-neutral-700"
+                            title="View Public Article"
+                          >
+                            <ArrowUpRight className="w-3.5 h-3.5" />
+                          </Link>
+                          <button
+                            onClick={() => deleteMemo(memo.id)}
+                            className="p-1 hover:bg-accent-red hover:text-white border border-neutral-300 text-neutral-500 transition-colors"
+                            title="Delete Memo"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1402,7 +1872,170 @@ export default function AdminPage() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB 4: ⚡ SERVICES                                                */}
+          {/* TAB 4: ❓ FAQ MANAGER WORKSTATION                                 */}
+          {/* ================================================================= */}
+          {activeTab === "faqs" && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white border-2 border-ink-black p-5 shadow-[4px_4px_0px_#000000]">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h1 className="text-2xl font-headline font-black uppercase">
+                        Client FAQ & Knowledge Base Manager
+                      </h1>
+                      <span className="font-mono text-xs bg-accent-yellow px-2 py-0.5 border border-ink-black font-black">
+                        {faqs.length} ENTRIES
+                      </span>
+                    </div>
+                    <p className="text-neutral-600 text-xs mt-1">
+                      Manage official client questions and answers across the Home page, About page, and Plans page.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={openFaqModalForNew}
+                    className="self-start md:self-auto px-4 py-2 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-mono font-black text-xs uppercase shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    Add New FAQ
+                  </button>
+                </div>
+
+                {/* Filters */}
+                <div className="mt-5 pt-4 border-t-2 border-neutral-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  {/* Search */}
+                  <div className="relative flex-1 max-w-md">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+                    <input
+                      type="text"
+                      placeholder="Search question, answer, badge..."
+                      value={faqSearch}
+                      onChange={(e) => setFaqSearch(e.target.value)}
+                      className="w-full pl-9 pr-3 py-1.5 bg-[#F7F5EE] border-2 border-ink-black text-xs font-mono focus:outline-none focus:bg-white"
+                    />
+                  </div>
+
+                  {/* Target Page Filter */}
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+                    <span className="text-neutral-500 font-bold mr-1 text-[11px]">PAGE:</span>
+                    {(["ALL", "HOME", "ABOUT", "PLANS"] as const).map((pg) => (
+                      <button
+                        key={pg}
+                        onClick={() => setFaqPageFilter(pg)}
+                        className={`px-2.5 py-1 border border-ink-black font-bold uppercase ${
+                          faqPageFilter === pg
+                            ? "bg-ink-black text-white"
+                            : "bg-white hover:bg-neutral-100"
+                        }`}
+                      >
+                        {pg}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Status Filter */}
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
+                    <span className="text-neutral-500 font-bold mr-1 text-[11px]">STATUS:</span>
+                    {(["ALL", "ACTIVE", "HIDDEN"] as const).map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => setFaqStatusFilter(st)}
+                        className={`px-2.5 py-1 border border-ink-black font-bold uppercase ${
+                          faqStatusFilter === st
+                            ? "bg-accent-yellow text-ink-black font-black"
+                            : "bg-white hover:bg-neutral-100"
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* FAQ Items Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {filteredFaqs.map((faq) => {
+                  const catCfg = FAQ_CATEGORY_CONFIG[faq.category];
+                  const pageCfg = FAQ_PAGE_CONFIG[faq.targetPage];
+                  const statusCfg = FAQ_STATUS_CONFIG[faq.status];
+
+                  return (
+                    <div
+                      key={faq.id}
+                      className="bg-white border-2 border-ink-black p-5 shadow-[4px_4px_0px_#000000] flex flex-col justify-between"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between font-mono text-xs gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-neutral-500">{faq.id}</span>
+                            <span
+                              className={`text-[9px] font-black px-2 py-0.5 border ${pageCfg.border} ${pageCfg.bg} ${pageCfg.text}`}
+                            >
+                              {pageCfg.label}
+                            </span>
+                            <span
+                              className={`text-[9px] font-black px-2 py-0.5 border ${catCfg.border} ${catCfg.bg} ${catCfg.text}`}
+                            >
+                              {catCfg.label}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() => toggleFaqStatus(faq.id)}
+                            className={`text-[9px] font-black px-2 py-0.5 border ${statusCfg.border} ${statusCfg.bg} ${statusCfg.text}`}
+                          >
+                            {statusCfg.label}
+                          </button>
+                        </div>
+
+                        <h3 className="font-headline font-black text-base leading-snug">
+                          {faq.question}
+                        </h3>
+
+                        <p className="text-xs text-neutral-700 leading-relaxed">
+                          {faq.answer}
+                        </p>
+
+                        {faq.highlightBadge && (
+                          <div className="inline-block bg-accent-yellow/20 border border-ink-black px-2 py-0.5 text-[10px] font-mono font-black text-ink-black">
+                            {faq.highlightBadge}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-5 pt-3 border-t-2 border-neutral-200 flex items-center justify-between font-mono text-xs">
+                        <span className="text-[10px] text-neutral-500">
+                          Order Priority: #{faq.order}
+                        </span>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => openFaqModalForEdit(faq)}
+                            className="px-2.5 py-1 bg-white hover:bg-neutral-100 border border-ink-black font-bold text-xs flex items-center gap-1"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                            <span>Edit</span>
+                          </button>
+                          <button
+                            onClick={() => deleteFaq(faq.id)}
+                            className="p-1 hover:bg-accent-red hover:text-white border border-neutral-300 text-neutral-500 transition-colors"
+                            title="Delete FAQ"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ================================================================= */}
+          {/* TAB 5: ⚡ SERVICES                                                */}
           {/* ================================================================= */}
           {activeTab === "services" && (
             <div className="space-y-6">
@@ -1589,7 +2222,7 @@ export default function AdminPage() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB 5: 💼 PRICING PLANS & CAPACITY SLOTS                          */}
+          {/* TAB 6: 💼 PRICING PLANS & CAPACITY SLOTS                          */}
           {/* ================================================================= */}
           {activeTab === "plans" && (
             <div className="space-y-6">
@@ -1726,7 +2359,7 @@ export default function AdminPage() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB 6: 🏆 PROJECTS PORTFOLIO                                      */}
+          {/* TAB 7: 🏆 PROJECTS PORTFOLIO                                      */}
           {/* ================================================================= */}
           {activeTab === "projects" && (
             <div className="space-y-6">
@@ -1835,32 +2468,38 @@ export default function AdminPage() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB 7: 💬 CLIENT TESTIMONIALS                                     */}
+          {/* TAB 8: 💬 CLIENT TESTIMONIALS                                     */}
           {/* ================================================================= */}
           {activeTab === "testimonials" && (
             <div className="space-y-6">
               {/* Header */}
-              <div className="bg-white border-2 border-ink-black p-5 shadow-[4px_4px_0px_#000000]">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-2xl font-headline font-black uppercase">
-                        Verified Client Reviews & Testimonials
-                      </h1>
-                      <span className="font-mono text-xs bg-accent-yellow px-2 py-0.5 border border-ink-black font-black">
-                        {reviews.length} REVIEWS
-                      </span>
-                    </div>
-                    <p className="text-neutral-600 text-xs mt-1">
-                      Manage authentic customer feedback, verified contract hashes, and conversion ROI statements.
-                    </p>
+              <div className="bg-white border-2 border-ink-black p-5 shadow-[4px_4px_0px_#000000] flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-headline font-black uppercase">
+                      Verified Client Reviews & Testimonials
+                    </h1>
+                    <span className="font-mono text-xs bg-accent-yellow px-2 py-0.5 border border-ink-black font-black">
+                      {reviews.length} REVIEWS
+                    </span>
                   </div>
+                  <p className="text-neutral-600 text-xs mt-1">
+                    Manage authentic customer feedback, verified contract hashes, and conversion ROI statements.
+                  </p>
+                </div>
 
-                  <div className="flex items-center gap-2 font-mono text-xs bg-[#F7F5EE] border border-ink-black px-3 py-1.5">
+                <div className="flex items-center gap-3">
+                  <div className="hidden sm:flex items-center gap-2 font-mono text-xs bg-[#F7F5EE] border border-ink-black px-3 py-1.5">
                     <Star className="w-4 h-4 fill-accent-yellow text-ink-black" />
                     <span className="font-black">5.0 / 5.0 RATING</span>
-                    <span className="text-neutral-500">| 100% Client Satisfaction</span>
                   </div>
+                  <button
+                    onClick={openReviewModalForNew}
+                    className="px-4 py-2 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-mono font-black text-xs uppercase shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    Add Testimonial
+                  </button>
                 </div>
               </div>
 
@@ -1907,19 +2546,38 @@ export default function AdminPage() {
                     </div>
 
                     {/* Author Footer */}
-                    <div className="mt-5 pt-3 border-t-2 border-neutral-200 flex items-center gap-3">
-                      <div
-                        className={`w-9 h-9 border-2 border-ink-black flex items-center justify-center font-mono font-black text-xs ${
-                          rev.avatarBg || "bg-accent-yellow text-ink-black"
-                        }`}
-                      >
-                        {rev.avatarInitials}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-bold text-xs">{rev.clientName}</div>
-                        <div className="text-[10px] font-mono text-neutral-500">
-                          {rev.role}, {rev.company}
+                    <div className="mt-5 pt-3 border-t-2 border-neutral-200 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-9 h-9 border-2 border-ink-black flex items-center justify-center font-mono font-black text-xs ${
+                            rev.avatarBg || "bg-accent-yellow text-ink-black"
+                          }`}
+                        >
+                          {rev.avatarInitials}
                         </div>
+                        <div>
+                          <div className="font-bold text-xs">{rev.clientName}</div>
+                          <div className="text-[10px] font-mono text-neutral-500">
+                            {rev.role}, {rev.company}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openReviewModalForEdit(rev)}
+                          className="p-1 hover:bg-neutral-100 border border-neutral-300 text-neutral-700"
+                          title="Edit Review"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteReview(rev.id)}
+                          className="p-1 hover:bg-accent-red hover:text-white border border-neutral-300 text-neutral-500 transition-colors"
+                          title="Delete Review"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1929,7 +2587,7 @@ export default function AdminPage() {
           )}
 
           {/* ================================================================= */}
-          {/* TAB 8: ⚙️ AGENCY SETTINGS                                         */}
+          {/* TAB 9: ⚙️ AGENCY SETTINGS                                         */}
           {/* ================================================================= */}
           {activeTab === "settings" && (
             <div className="space-y-6">
@@ -2156,10 +2814,877 @@ export default function AdminPage() {
       </div>
 
       {/* ===================================================================== */}
-      {/* 3. MODALS SYSTEM                                                      */}
+      {/* 3. MODALS SYSTEM: IN-DEPTH MEMO STUDIO, FAQS, REVIEWS, LEADS         */}
       {/* ===================================================================== */}
 
-      {/* MODAL: View Inquiry Details */}
+      {/* ===================================================================== */}
+      {/* MODAL A: IN-DEPTH JOURNAL MEMO STUDIO & LIVE PREVIEW COMPOSER         */}
+      {/* ===================================================================== */}
+      {isMemoStudioOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-ink-black/70 backdrop-blur-xs">
+          <div className="bg-white border-2 border-ink-black max-w-4xl w-full shadow-[8px_8px_0px_#000000] flex flex-col h-[92vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-[#F7F5EE] border-b-2 border-ink-black px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 bg-accent-yellow border-2 border-ink-black flex items-center justify-center">
+                  <BookOpen className="w-4 h-4 text-ink-black" />
+                </div>
+                <div>
+                  <h3 className="font-headline font-black text-lg sm:text-xl uppercase leading-none">
+                    {memoFormId ? "Edit Journal Technical Memo" : "Compose New Journal Memo"}
+                  </h3>
+                  <div className="text-[10px] font-mono text-neutral-500 uppercase mt-0.5">
+                    Multi-Section Editorial Studio • Live `/journal` Engine Parity
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsMemoStudioOpen(false)}
+                className="p-1.5 border border-ink-black hover:bg-accent-red hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Composer Step / Tab Switcher */}
+            <div className="bg-neutral-100 border-b-2 border-ink-black px-5 py-2 flex items-center gap-2 overflow-x-auto font-mono text-xs">
+              <button
+                type="button"
+                onClick={() => setMemoComposerTab("meta")}
+                className={`px-3 py-1 border border-ink-black font-bold uppercase transition-all ${
+                  memoComposerTab === "meta"
+                    ? "bg-accent-yellow text-ink-black shadow-[2px_2px_0px_#000000]"
+                    : "bg-white hover:bg-neutral-200"
+                }`}
+              >
+                1. Metadata & Slug
+              </button>
+              <button
+                type="button"
+                onClick={() => setMemoComposerTab("author")}
+                className={`px-3 py-1 border border-ink-black font-bold uppercase transition-all ${
+                  memoComposerTab === "author"
+                    ? "bg-accent-yellow text-ink-black shadow-[2px_2px_0px_#000000]"
+                    : "bg-white hover:bg-neutral-200"
+                }`}
+              >
+                2. Author, Synopsis & Metrics
+              </button>
+              <button
+                type="button"
+                onClick={() => setMemoComposerTab("content")}
+                className={`px-3 py-1 border border-ink-black font-bold uppercase transition-all ${
+                  memoComposerTab === "content"
+                    ? "bg-accent-yellow text-ink-black shadow-[2px_2px_0px_#000000]"
+                    : "bg-white hover:bg-neutral-200"
+                }`}
+              >
+                3. Section, Code & Callout
+              </button>
+              <button
+                type="button"
+                onClick={() => setMemoComposerTab("preview")}
+                className={`px-3 py-1 border border-ink-black font-black uppercase transition-all flex items-center gap-1.5 ${
+                  memoComposerTab === "preview"
+                    ? "bg-accent-teal text-ink-black shadow-[2px_2px_0px_#000000]"
+                    : "bg-white hover:bg-neutral-200 text-accent-red"
+                }`}
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>4. 👁️ Live Article Preview</span>
+              </button>
+            </div>
+
+            {/* Composer Body Form */}
+            <form onSubmit={handleSaveMemoStudio} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
+              {/* TAB 1: METADATA */}
+              {memoComposerTab === "meta" && (
+                <div className="space-y-4 text-xs font-mono">
+                  <div>
+                    <label className="block font-bold mb-1">ARTICLE HEADLINE *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. WHY WE DITCHED WORDPRESS FOR NEXT.JS 14 APP ROUTER"
+                      value={memoForm.title}
+                      onChange={(e) => setMemoForm({ ...memoForm, title: e.target.value })}
+                      className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black font-bold focus:outline-none focus:bg-white uppercase text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1">SUBTITLE / DECK</label>
+                    <textarea
+                      rows={2}
+                      placeholder="High-converting commercial platforms suffer from layout shifts and database locks..."
+                      value={memoForm.subtitle}
+                      onChange={(e) => setMemoForm({ ...memoForm, subtitle: e.target.value })}
+                      className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-bold mb-1">CATEGORY</label>
+                      <select
+                        value={memoForm.category}
+                        onChange={(e) => setMemoForm({ ...memoForm, category: e.target.value })}
+                        className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                      >
+                        <option value="ARCHITECTURE">ARCHITECTURE</option>
+                        <option value="SEO ENGINE">SEO ENGINE</option>
+                        <option value="BACKEND">BACKEND</option>
+                        <option value="DESIGN SYSTEM">DESIGN SYSTEM</option>
+                        <option value="PERFORMANCE SLA">PERFORMANCE SLA</option>
+                        <option value="AGILE STRATEGY">AGILE STRATEGY</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-1">ESTIMATED READ TIME</label>
+                      <input
+                        type="text"
+                        placeholder="7 MIN READ"
+                        value={memoForm.readTime}
+                        onChange={(e) => setMemoForm({ ...memoForm, readTime: e.target.value })}
+                        className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-1">STATUS</label>
+                      <select
+                        value={memoForm.status}
+                        onChange={(e) =>
+                          setMemoForm({ ...memoForm, status: e.target.value as MemoStatus })
+                        }
+                        className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                      >
+                        <option value="PUBLISHED">PUBLISHED (LIVE)</option>
+                        <option value="DRAFT">DRAFT (STAGING)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold mb-1">CANONICAL SLUG</label>
+                      <input
+                        type="text"
+                        placeholder="why-we-ditched-wordpress-for-nextjs-14"
+                        value={memoForm.slug}
+                        onChange={(e) => setMemoForm({ ...memoForm, slug: e.target.value })}
+                        className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                      />
+                      <span className="text-[10px] text-neutral-500 block mt-1">
+                        Leave blank to auto-generate from headline.
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-1">TAGS (COMMA SEPARATED)</label>
+                      <input
+                        type="text"
+                        placeholder="Next.js 14, App Router, React 19, Performance"
+                        value={memoForm.tags}
+                        onChange={(e) => setMemoForm({ ...memoForm, tags: e.target.value })}
+                        className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: AUTHOR, SYNOPSIS & METRICS */}
+              {memoComposerTab === "author" && (
+                <div className="space-y-4 text-xs font-mono">
+                  {/* Author Box */}
+                  <div className="p-3 bg-white border-2 border-ink-black space-y-3">
+                    <span className="font-bold text-neutral-600 block uppercase border-b pb-1">
+                      Author Attribution
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block font-bold mb-1">AUTHOR NAME</label>
+                        <input
+                          type="text"
+                          value={memoForm.authorName}
+                          onChange={(e) => setMemoForm({ ...memoForm, authorName: e.target.value })}
+                          className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold mb-1">ROLE / TITLE</label>
+                        <input
+                          type="text"
+                          value={memoForm.authorRole}
+                          onChange={(e) => setMemoForm({ ...memoForm, authorRole: e.target.value })}
+                          className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold mb-1">HANDLE / SOCIAL</label>
+                        <input
+                          type="text"
+                          value={memoForm.authorHandle}
+                          onChange={(e) => setMemoForm({ ...memoForm, authorHandle: e.target.value })}
+                          className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Executive Summary */}
+                  <div>
+                    <label className="block font-bold mb-1">EXECUTIVE SUMMARY / CALLOUT SYNOPSIS</label>
+                    <textarea
+                      rows={3}
+                      placeholder="WordPress powers 40% of the web, but for high-growth commercial platforms, PHP database locks quietly destroy conversion rates..."
+                      value={memoForm.executiveSummary}
+                      onChange={(e) => setMemoForm({ ...memoForm, executiveSummary: e.target.value })}
+                      className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                    />
+                  </div>
+
+                  {/* Key Takeaways */}
+                  <div className="space-y-2">
+                    <label className="block font-bold">KEY TAKEAWAYS (BULLET LIST)</label>
+                    <input
+                      type="text"
+                      placeholder="Takeaway 1: Zero hydration overhead."
+                      value={memoForm.takeaway1}
+                      onChange={(e) => setMemoForm({ ...memoForm, takeaway1: e.target.value })}
+                      className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Takeaway 2: Sub-400ms LCP globally."
+                      value={memoForm.takeaway2}
+                      onChange={(e) => setMemoForm({ ...memoForm, takeaway2: e.target.value })}
+                      className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Takeaway 3: 100% intellectual property rights transfer."
+                      value={memoForm.takeaway3}
+                      onChange={(e) => setMemoForm({ ...memoForm, takeaway3: e.target.value })}
+                      className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                    />
+                  </div>
+
+                  {/* Outcome Metrics */}
+                  <div className="p-3 bg-white border-2 border-ink-black space-y-3">
+                    <span className="font-bold text-neutral-600 block uppercase border-b pb-1">
+                      Key Outcome Metrics
+                    </span>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">METRIC 1 LABEL</label>
+                        <input
+                          type="text"
+                          value={memoForm.metricLabel1}
+                          onChange={(e) => setMemoForm({ ...memoForm, metricLabel1: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">METRIC 1 VALUE</label>
+                        <input
+                          type="text"
+                          value={memoForm.metricValue1}
+                          onChange={(e) => setMemoForm({ ...memoForm, metricValue1: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black font-bold text-emerald-700"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">METRIC 2 LABEL</label>
+                        <input
+                          type="text"
+                          value={memoForm.metricLabel2}
+                          onChange={(e) => setMemoForm({ ...memoForm, metricLabel2: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">METRIC 2 VALUE</label>
+                        <input
+                          type="text"
+                          value={memoForm.metricValue2}
+                          onChange={(e) => setMemoForm({ ...memoForm, metricValue2: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black font-bold text-emerald-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: SECTION CONTENT, CODE & CALLOUT */}
+              {memoComposerTab === "content" && (
+                <div className="space-y-4 text-xs font-mono">
+                  {/* Heading & Paragraph */}
+                  <div>
+                    <label className="block font-bold mb-1">SECTION HEADING</label>
+                    <input
+                      type="text"
+                      value={memoForm.sectionHeading}
+                      onChange={(e) => setMemoForm({ ...memoForm, sectionHeading: e.target.value })}
+                      className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black font-bold uppercase"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold mb-1">SECTION BODY / PARAGRAPHS</label>
+                    <textarea
+                      rows={4}
+                      value={memoForm.sectionContent}
+                      onChange={(e) => setMemoForm({ ...memoForm, sectionContent: e.target.value })}
+                      className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white leading-relaxed"
+                    />
+                  </div>
+
+                  {/* Code Block Editor */}
+                  <div className="p-3 bg-white border-2 border-ink-black space-y-2">
+                    <div className="flex items-center justify-between border-b pb-1">
+                      <span className="font-bold text-neutral-600 uppercase flex items-center gap-1.5">
+                        <Code className="w-3.5 h-3.5" />
+                        Code Snippet Embed
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">FILENAME / PATH</label>
+                        <input
+                          type="text"
+                          value={memoForm.codeFilename}
+                          onChange={(e) => setMemoForm({ ...memoForm, codeFilename: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">LANGUAGE</label>
+                        <input
+                          type="text"
+                          value={memoForm.codeLanguage}
+                          onChange={(e) => setMemoForm({ ...memoForm, codeLanguage: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-neutral-500 mb-0.5">SOURCE CODE</label>
+                      <textarea
+                        rows={4}
+                        value={memoForm.codeSnippet}
+                        onChange={(e) => setMemoForm({ ...memoForm, codeSnippet: e.target.value })}
+                        className="w-full p-2 bg-neutral-900 text-emerald-400 font-mono text-xs border border-ink-black focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Callout Box */}
+                  <div className="p-3 bg-white border-2 border-ink-black space-y-2">
+                    <span className="font-bold text-neutral-600 block uppercase border-b pb-1">
+                      Callout Highlight Box
+                    </span>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">CALLOUT TYPE</label>
+                        <select
+                          value={memoForm.calloutType}
+                          onChange={(e) =>
+                            setMemoForm({
+                              ...memoForm,
+                              calloutType: e.target.value as "note" | "warning" | "pro-tip",
+                            })
+                          }
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black font-bold"
+                        >
+                          <option value="pro-tip">PRO-TIP (ACCENT YELLOW)</option>
+                          <option value="note">NOTE (TEAL ACCENT)</option>
+                          <option value="warning">WARNING (RED ACCENT)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-neutral-500 mb-0.5">CALLOUT TITLE</label>
+                        <input
+                          type="text"
+                          value={memoForm.calloutTitle}
+                          onChange={(e) => setMemoForm({ ...memoForm, calloutTitle: e.target.value })}
+                          className="w-full p-1.5 bg-[#F7F5EE] border border-ink-black font-bold"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-neutral-500 mb-0.5">CALLOUT BODY</label>
+                      <textarea
+                        rows={2}
+                        value={memoForm.calloutBody}
+                        onChange={(e) => setMemoForm({ ...memoForm, calloutBody: e.target.value })}
+                        className="w-full p-2 bg-[#F7F5EE] border border-ink-black"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: 👁️ LIVE ARTICLE PREVIEW */}
+              {memoComposerTab === "preview" && (
+                <div className="bg-[#F7F5EE] border-2 border-ink-black p-5 sm:p-8 space-y-6 shadow-inner">
+                  {/* Article Hero Preview */}
+                  <div className="space-y-3 pb-6 border-b-2 border-ink-black">
+                    <div className="flex items-center gap-2 font-mono text-xs">
+                      <span className="bg-accent-yellow px-2 py-0.5 border border-ink-black font-black">
+                        {memoForm.category}
+                      </span>
+                      <span className="text-neutral-500 font-bold">{memoForm.readTime}</span>
+                      <span className="text-neutral-400">•</span>
+                      <span className="text-neutral-600 font-mono">
+                        {new Date().toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "2-digit",
+                          year: "numeric",
+                        }).toUpperCase()}
+                      </span>
+                    </div>
+
+                    <h1 className="font-headline font-black text-2xl sm:text-3xl uppercase leading-tight tracking-tight">
+                      {memoForm.title || "UNTITLED MEMO HEADLINE"}
+                    </h1>
+
+                    {memoForm.subtitle && (
+                      <p className="text-neutral-600 font-sans text-sm sm:text-base leading-relaxed">
+                        {memoForm.subtitle}
+                      </p>
+                    )}
+
+                    {/* Author Attribution Card */}
+                    <div className="flex items-center gap-3 pt-3">
+                      <div className="w-10 h-10 bg-accent-teal border-2 border-ink-black flex items-center justify-center font-mono font-black text-sm">
+                        {memoForm.authorName.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div className="font-mono text-xs">
+                        <div className="font-black text-ink-black">{memoForm.authorName}</div>
+                        <div className="text-neutral-500 text-[11px]">
+                          {memoForm.authorRole} • {memoForm.authorHandle}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Outcome Metrics Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                    <div className="bg-white border-2 border-ink-black p-3.5 shadow-[3px_3px_0px_#000000]">
+                      <div className="text-[10px] font-mono text-neutral-500 font-bold uppercase">
+                        {memoForm.metricLabel1 || "SPEED SLA"}
+                      </div>
+                      <div className="text-2xl font-headline font-black text-emerald-700 mt-0.5">
+                        {memoForm.metricValue1 || "100/100"}
+                      </div>
+                    </div>
+                    <div className="bg-white border-2 border-ink-black p-3.5 shadow-[3px_3px_0px_#000000]">
+                      <div className="text-[10px] font-mono text-neutral-500 font-bold uppercase">
+                        {memoForm.metricLabel2 || "OUTCOME"}
+                      </div>
+                      <div className="text-2xl font-headline font-black text-accent-red mt-0.5">
+                        {memoForm.metricValue2 || "+100%"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Executive Summary Box */}
+                  {memoForm.executiveSummary && (
+                    <div className="bg-white border-2 border-ink-black p-4 shadow-[4px_4px_0px_#000000] space-y-2">
+                      <div className="text-xs font-mono font-black uppercase text-accent-red flex items-center gap-1.5">
+                        <Lightbulb className="w-4 h-4" />
+                        Executive Architectural Summary
+                      </div>
+                      <p className="text-xs sm:text-sm text-neutral-800 leading-relaxed font-sans">
+                        {memoForm.executiveSummary}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Key Takeaways */}
+                  {(memoForm.takeaway1 || memoForm.takeaway2 || memoForm.takeaway3) && (
+                    <div className="bg-[#FFE600]/20 border-2 border-ink-black p-4 space-y-2">
+                      <div className="font-mono text-xs font-black uppercase flex items-center gap-1.5">
+                        <CheckSquare className="w-4 h-4 text-ink-black" />
+                        Core Engineering Takeaways
+                      </div>
+                      <ul className="space-y-1 text-xs font-mono text-neutral-800">
+                        {memoForm.takeaway1 && <li>• {memoForm.takeaway1}</li>}
+                        {memoForm.takeaway2 && <li>• {memoForm.takeaway2}</li>}
+                        {memoForm.takeaway3 && <li>• {memoForm.takeaway3}</li>}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Section Content */}
+                  <div className="bg-white border-2 border-ink-black p-5 space-y-4">
+                    <h2 className="font-headline font-black text-lg uppercase pb-2 border-b-2 border-neutral-200">
+                      {memoForm.sectionHeading}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-neutral-800 leading-relaxed font-sans">
+                      {memoForm.sectionContent}
+                    </p>
+
+                    {/* Styled Code Block */}
+                    {memoForm.codeSnippet && (
+                      <div className="border-2 border-ink-black overflow-hidden shadow-[3px_3px_0px_#000000]">
+                        <div className="bg-neutral-800 text-neutral-300 px-3 py-1.5 font-mono text-xs flex items-center justify-between border-b border-neutral-700">
+                          <span className="font-bold">{memoForm.codeFilename}</span>
+                          <span className="text-[10px] bg-neutral-700 px-1.5 py-0.2 uppercase">
+                            {memoForm.codeLanguage}
+                          </span>
+                        </div>
+                        <pre className="p-3 bg-neutral-950 text-emerald-400 font-mono text-xs overflow-x-auto">
+                          <code>{memoForm.codeSnippet}</code>
+                        </pre>
+                      </div>
+                    )}
+
+                    {/* Callout Box */}
+                    {memoForm.calloutBody && (
+                      <div
+                        className={`p-3.5 border-2 border-ink-black space-y-1 ${
+                          memoForm.calloutType === "pro-tip"
+                            ? "bg-accent-yellow/30"
+                            : memoForm.calloutType === "warning"
+                            ? "bg-accent-red/20"
+                            : "bg-accent-teal/20"
+                        }`}
+                      >
+                        <div className="font-mono text-xs font-black uppercase flex items-center gap-1.5">
+                          {memoForm.calloutType === "warning" ? (
+                            <AlertTriangle className="w-4 h-4 text-accent-red" />
+                          ) : (
+                            <Info className="w-4 h-4 text-ink-black" />
+                          )}
+                          {memoForm.calloutTitle || "SYSTEM ADVISORY"}
+                        </div>
+                        <p className="text-xs text-neutral-700">{memoForm.calloutBody}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Footer Actions */}
+              <div className="pt-4 border-t-2 border-neutral-200 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setIsMemoStudioOpen(false)}
+                  className="px-4 py-2 border border-ink-black font-mono font-bold text-xs uppercase hover:bg-neutral-100"
+                >
+                  Cancel
+                </button>
+
+                <div className="flex items-center gap-2">
+                  {memoComposerTab !== "preview" ? (
+                    <button
+                      type="button"
+                      onClick={() => setMemoComposerTab("preview")}
+                      className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 border border-ink-black font-mono font-bold text-xs uppercase flex items-center gap-1.5"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      Preview
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setMemoComposerTab("content")}
+                      className="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 border border-ink-black font-mono font-bold text-xs uppercase"
+                    >
+                      &larr; Back to Editor
+                    </button>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-mono font-black text-xs uppercase shadow-[3px_3px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5 flex items-center gap-1.5"
+                  >
+                    <Check className="w-4 h-4 stroke-[3]" />
+                    {memoFormId ? "Save Changes" : "Commit to Journal"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL B: ADD / EDIT FAQ ITEM                                          */}
+      {/* ===================================================================== */}
+      {isFaqModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
+          <div className="bg-white border-2 border-ink-black max-w-lg w-full shadow-[8px_8px_0px_#000000] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-ink-black">
+              <h3 className="font-headline font-black text-xl uppercase">
+                {editingFaqId ? "Edit FAQ Item" : "Create New FAQ"}
+              </h3>
+              <button
+                onClick={() => setIsFaqModalOpen(false)}
+                className="p-1 border border-ink-black hover:bg-neutral-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFaq} className="space-y-3 text-xs font-mono">
+              <div>
+                <label className="block font-bold mb-1">QUESTION *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. How fast can you deliver a custom Next.js website?"
+                  value={faqForm.question}
+                  onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                  className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">ANSWER *</label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Detail the exact process, timeline, or engineering guarantee..."
+                  value={faqForm.answer}
+                  onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                  className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">TARGET PAGE</label>
+                  <select
+                    value={faqForm.targetPage}
+                    onChange={(e) =>
+                      setFaqForm({ ...faqForm, targetPage: e.target.value as FaqTargetPage })
+                    }
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                  >
+                    <option value="HOME">HOME PAGE</option>
+                    <option value="ABOUT">ABOUT PAGE</option>
+                    <option value="PLANS">PLANS PAGE</option>
+                    <option value="ALL">GLOBAL / ALL</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">CATEGORY</label>
+                  <select
+                    value={faqForm.category}
+                    onChange={(e) =>
+                      setFaqForm({ ...faqForm, category: e.target.value as FaqCategory })
+                    }
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                  >
+                    <option value="GENERAL">GENERAL PROCESS</option>
+                    <option value="PRICING">PRICING & SPRINT</option>
+                    <option value="ENGINEERING">ENGINEERING & SPEED</option>
+                    <option value="OWNERSHIP">100% IP OWNERSHIP</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">HIGHLIGHT BADGE</label>
+                  <input
+                    type="text"
+                    placeholder="2-4 WEEK SPRINTS"
+                    value={faqForm.highlightBadge}
+                    onChange={(e) => setFaqForm({ ...faqForm, highlightBadge: e.target.value })}
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white uppercase font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold mb-1">STATUS</label>
+                  <select
+                    value={faqForm.status}
+                    onChange={(e) =>
+                      setFaqForm({ ...faqForm, status: e.target.value as FaqStatus })
+                    }
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                  >
+                    <option value="ACTIVE">ACTIVE (VISIBLE)</option>
+                    <option value="HIDDEN">HIDDEN (DRAFT)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setIsFaqModalOpen(false)}
+                  className="px-3 py-1.5 border border-ink-black font-bold uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-black uppercase shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5"
+                >
+                  Save FAQ
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL C: ADD / EDIT CLIENT TESTIMONIAL                                */}
+      {/* ===================================================================== */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
+          <div className="bg-white border-2 border-ink-black max-w-lg w-full shadow-[8px_8px_0px_#000000] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b-2 border-ink-black">
+              <h3 className="font-headline font-black text-xl uppercase">
+                {editingReviewId ? "Edit Testimonial" : "Register Client Testimonial"}
+              </h3>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="p-1 border border-ink-black hover:bg-neutral-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveReview} className="space-y-3 text-xs font-mono">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">CLIENT NAME *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Sarah Jenkins"
+                    value={reviewForm.clientName}
+                    onChange={(e) => setReviewForm({ ...reviewForm, clientName: e.target.value })}
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">COMPANY *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="GridFlow Systems"
+                    value={reviewForm.company}
+                    onChange={(e) => setReviewForm({ ...reviewForm, company: e.target.value })}
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">ROLE / TITLE</label>
+                  <input
+                    type="text"
+                    placeholder="VP of Engineering"
+                    value={reviewForm.role}
+                    onChange={(e) => setReviewForm({ ...reviewForm, role: e.target.value })}
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">STAR RATING (1 - 5)</label>
+                  <select
+                    value={reviewForm.rating}
+                    onChange={(e) =>
+                      setReviewForm({ ...reviewForm, rating: parseInt(e.target.value) })
+                    }
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white font-bold"
+                  >
+                    <option value="5">★★★★★ 5 Stars</option>
+                    <option value="4">★★★★☆ 4 Stars</option>
+                    <option value="3">★★★☆☆ 3 Stars</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-1">CLIENT QUOTE *</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="CodeClovers rebuilt our developer documentation in Next.js 14. Global LCP dropped to 0.19s..."
+                  value={reviewForm.quote}
+                  onChange={(e) => setReviewForm({ ...reviewForm, quote: e.target.value })}
+                  className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white leading-relaxed"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">CONTRACT HASH / ID</label>
+                  <input
+                    type="text"
+                    placeholder="CLV-4091"
+                    value={reviewForm.contractId}
+                    onChange={(e) => setReviewForm({ ...reviewForm, contractId: e.target.value })}
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white uppercase font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">ROI METRIC TAG</label>
+                  <input
+                    type="text"
+                    placeholder="+340% CONVERSION"
+                    value={reviewForm.metricBadge}
+                    onChange={(e) => setReviewForm({ ...reviewForm, metricBadge: e.target.value })}
+                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white uppercase font-bold text-accent-red"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-1 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="verifiedCheck"
+                  checked={reviewForm.verified}
+                  onChange={(e) => setReviewForm({ ...reviewForm, verified: e.target.checked })}
+                  className="w-4 h-4 accent-ink-black"
+                />
+                <label htmlFor="verifiedCheck" className="font-bold cursor-pointer">
+                  Mark as Verified Enterprise Client Review
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-neutral-200">
+                <button
+                  type="button"
+                  onClick={() => setIsReviewModalOpen(false)}
+                  className="px-3 py-1.5 border border-ink-black font-bold uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-black uppercase shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5"
+                >
+                  Save Testimonial
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ===================================================================== */}
+      {/* MODAL D: VIEW INQUIRY DETAILS                                         */}
+      {/* ===================================================================== */}
       {selectedInquiry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
           <div className="bg-white border-2 border-ink-black max-w-2xl w-full shadow-[8px_8px_0px_#000000] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -2312,7 +3837,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* MODAL: Register New Lead */}
+      {/* ===================================================================== */}
+      {/* MODAL E: REGISTER NEW LEAD                                            */}
+      {/* ===================================================================== */}
       {isNewInquiryModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
           <div className="bg-white border-2 border-ink-black max-w-lg w-full shadow-[8px_8px_0px_#000000] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -2437,121 +3964,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* MODAL: Create New Journal Memo */}
-      {isNewMemoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
-          <div className="bg-white border-2 border-ink-black max-w-lg w-full shadow-[8px_8px_0px_#000000] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b-2 border-ink-black">
-              <h3 className="font-headline font-black text-xl uppercase">
-                Publish Technical Memo / Journal Entry
-              </h3>
-              <button
-                onClick={() => setIsNewMemoModalOpen(false)}
-                className="p-1 border border-ink-black hover:bg-neutral-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateMemo} className="space-y-3 text-xs font-mono">
-              <div>
-                <label className="block font-bold mb-1">ARTICLE TITLE *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. ZERO-JAVASCRIPT HYDRATION IN NEXT.JS 14"
-                  value={newMemoForm.title}
-                  onChange={(e) =>
-                    setNewMemoForm({ ...newMemoForm, title: e.target.value })
-                  }
-                  className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white uppercase font-bold"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold mb-1">CATEGORY</label>
-                  <select
-                    value={newMemoForm.category}
-                    onChange={(e) =>
-                      setNewMemoForm({ ...newMemoForm, category: e.target.value })
-                    }
-                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
-                  >
-                    <option value="ARCHITECTURE">ARCHITECTURE</option>
-                    <option value="SEO ENGINE">SEO ENGINE</option>
-                    <option value="BACKEND">BACKEND</option>
-                    <option value="DESIGN SYSTEM">DESIGN SYSTEM</option>
-                    <option value="PERFORMANCE SLA">PERFORMANCE SLA</option>
-                    <option value="AGILE STRATEGY">AGILE STRATEGY</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block font-bold mb-1">INITIAL STATUS</label>
-                  <select
-                    value={newMemoForm.status}
-                    onChange={(e) =>
-                      setNewMemoForm({
-                        ...newMemoForm,
-                        status: e.target.value as MemoStatus,
-                      })
-                    }
-                    className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
-                  >
-                    <option value="PUBLISHED">PUBLISHED (LIVE)</option>
-                    <option value="DRAFT">DRAFT (UNLISTED)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">TAGS (COMMA SEPARATED)</label>
-                <input
-                  type="text"
-                  placeholder="Next.js 14, Web Vitals, Performance"
-                  value={newMemoForm.tags}
-                  onChange={(e) =>
-                    setNewMemoForm({ ...newMemoForm, tags: e.target.value })
-                  }
-                  className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold mb-1">EXCERPT / TEASER SUMMARY *</label>
-                <textarea
-                  rows={3}
-                  required
-                  placeholder="A concise, high-contrast engineering thesis explaining the findings..."
-                  value={newMemoForm.excerpt}
-                  onChange={(e) =>
-                    setNewMemoForm({ ...newMemoForm, excerpt: e.target.value })
-                  }
-                  className="w-full p-2 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2 border-t border-neutral-200">
-                <button
-                  type="button"
-                  onClick={() => setIsNewMemoModalOpen(false)}
-                  className="px-3 py-1.5 border border-ink-black font-bold uppercase"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 bg-accent-yellow hover:bg-[#ffe000] border-2 border-ink-black font-black uppercase shadow-[2px_2px_0px_#000000] active:translate-x-0.5 active:translate-y-0.5"
-                >
-                  Commit Memo
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: Add New Portfolio Project */}
+      {/* ===================================================================== */}
+      {/* MODAL F: ADD NEW SHOWCASE PROJECT                                     */}
+      {/* ===================================================================== */}
       {isNewProjectModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
           <div className="bg-white border-2 border-ink-black max-w-lg w-full shadow-[8px_8px_0px_#000000] p-6 space-y-4 max-h-[90vh] overflow-y-auto">
@@ -2673,7 +4088,9 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* MODAL: Edit Plan Price */}
+      {/* ===================================================================== */}
+      {/* MODAL G: EDIT PLAN PRICING                                            */}
+      {/* ===================================================================== */}
       {isPriceEditModalOpen && editingPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-black/60 backdrop-blur-xs">
           <div className="bg-white border-2 border-ink-black max-w-sm w-full shadow-[8px_8px_0px_#000000] p-5 space-y-4">

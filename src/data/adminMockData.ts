@@ -4,8 +4,11 @@
  * =============================================================================
  * Comprehensive TypeScript types, status badges, UI color maps, and initial
  * mock data for the CodeClovers Engineering Studio admin control interface.
+ * Extended with full Journal parity, Client Testimonial CRUD, and FAQ Manager.
  * =============================================================================
  */
+
+import { JOURNAL_ARTICLES, type JournalArticle } from "./journalArticles";
 
 // -----------------------------------------------------------------------------
 // 1. INQUIRIES & LEADS TYPES & DATA
@@ -157,16 +160,58 @@ export const INITIAL_INQUIRIES: AdminInquiry[] = [
 ];
 
 // -----------------------------------------------------------------------------
-// 2. JOURNAL MEMOS TYPES & DATA
+// 2. JOURNAL MEMOS TYPES & DATA (FULL /JOURNAL PARITY)
 // -----------------------------------------------------------------------------
 
 export type MemoStatus = "PUBLISHED" | "DRAFT";
 
+export interface JournalArticleCallout {
+  type: "note" | "warning" | "pro-tip";
+  title: string;
+  body: string;
+}
+
+export interface JournalArticleCodeBlock {
+  filename: string;
+  language: string;
+  code: string;
+}
+
+export interface JournalArticleComparisonTable {
+  dimension: string;
+  legacy: string;
+  codeclovers: string;
+  impact: string;
+}
+
+export interface JournalArticleSection {
+  id: string;
+  heading: string;
+  content: string[];
+  callout?: JournalArticleCallout;
+  codeBlock?: JournalArticleCodeBlock;
+  comparisonTable?: JournalArticleComparisonTable[];
+  checklist?: string[];
+}
+
+export interface JournalArticleAuthor {
+  name: string;
+  role: string;
+  handle: string;
+}
+
+export interface JournalArticleMetric {
+  label: string;
+  value: string;
+}
+
 export interface AdminJournalMemo {
   id: string;
-  title: string;
   slug: string;
+  title: string;
+  subtitle?: string;
   category: string;
+  categoryColor?: string;
   readTime: string;
   date: string;
   excerpt: string;
@@ -174,105 +219,35 @@ export interface AdminJournalMemo {
   status: MemoStatus;
   views?: number;
   featured?: boolean;
-  authorName?: string;
+  author?: JournalArticleAuthor;
+  authorName?: string; // backwards compatibility convenience
+  metrics?: JournalArticleMetric[];
+  executiveSummary?: string;
+  keyTakeaways?: string[];
+  tableOfContents?: { id: string; label: string }[];
+  sections?: JournalArticleSection[];
 }
 
-export const INITIAL_JOURNAL_MEMOS: AdminJournalMemo[] = [
-  {
-    id: "MEMO-001",
-    title: "WHY WE DITCHED WORDPRESS FOR NEXT.JS 14 APP ROUTER",
-    slug: "why-we-ditched-wordpress-for-nextjs-14",
-    category: "ARCHITECTURE",
-    readTime: "7 MIN READ",
-    date: "NOV 12, 2026",
-    excerpt:
-      "WordPress powers 40% of the web, but for high-growth commercial platforms, PHP database locks, plugin bloat, and layout shifts quietly destroy conversion rates. Here is the technical post-mortem.",
-    tags: ["Next.js 14", "App Router", "Performance", "WordPress Migration", "React 18"],
-    status: "PUBLISHED",
-    views: 14280,
-    featured: true,
-    authorName: "Marcus Vance",
-  },
-  {
-    id: "MEMO-002",
-    title: "TECHNICAL SEO IN NEXT.JS 14: FROM ZERO TO NUMBER ONE",
-    slug: "technical-seo-nextjs-google-dominance",
-    category: "SEO ENGINE",
-    readTime: "9 MIN READ",
-    date: "NOV 04, 2026",
-    excerpt:
-      "The complete engineering blueprint for dynamic Schema.org entity graphs, automated XML sitemaps, edge-generated OG images, and rich search snippets that outrank legacy competitors.",
-    tags: ["Technical SEO", "Schema.org", "JSON-LD", "Core Web Vitals", "Next.js 14"],
-    status: "PUBLISHED",
-    views: 9840,
-    featured: false,
-    authorName: "Marcus Vance",
-  },
-  {
-    id: "MEMO-003",
-    title: "SCALING NODE.JS MICROSERVICES WITH PRISMA & REDIS",
-    slug: "scaling-nodejs-microservices-prisma-redis",
-    category: "BACKEND",
-    readTime: "11 MIN READ",
-    date: "OCT 28, 2026",
-    excerpt:
-      "Architecture patterns for sustaining 15,000+ concurrent requests per second without database connection pool exhaustion or serverless cold start latency bottlenecks.",
-    tags: ["Node.js", "Prisma ORM", "Redis", "PostgreSQL", "Microservices"],
-    status: "PUBLISHED",
-    views: 8120,
-    featured: false,
-    authorName: "Marcus Vance",
-  },
-  {
-    id: "MEMO-004",
-    title: "NEO-BRUTALIST DESIGN SYSTEMS: HIGH CONTRAST & ACCESSIBILITY",
-    slug: "neo-brutalist-design-systems-wcag-aaa",
-    category: "DESIGN SYSTEM",
-    readTime: "6 MIN READ",
-    date: "OCT 15, 2026",
-    excerpt:
-      "How to combine high-contrast Swiss typography, tactile 2px borders, and bold accent colors while exceeding the world's strictest accessibility standards (WCAG AAA).",
-    tags: ["Design Systems", "Neo-Brutalism", "WCAG AAA", "Accessibility", "Tailwind CSS"],
-    status: "PUBLISHED",
-    views: 11450,
-    featured: false,
-    authorName: "Marcus Vance",
-  },
-  {
-    id: "MEMO-005",
-    title: "THE ZERO-JAVASCRIPT TAX: HOW WE GUARANTEE 100/100 LIGHTHOUSE",
-    slug: "core-web-vitals-zero-javascript-tax",
-    category: "PERFORMANCE SLA",
-    readTime: "8 MIN READ",
-    date: "OCT 02, 2026",
-    excerpt:
-      "Auditing bundle bloat, streaming server rendering, font subsetting, and optimizing third-party tracking scripts to achieve zero cumulative layout shift (0.00 CLS).",
-    tags: ["Performance", "Lighthouse", "Core Web Vitals", "Next.js 14", "Bundle Analysis"],
-    status: "PUBLISHED",
-    views: 16730,
-    featured: false,
-    authorName: "Marcus Vance",
-  },
-  {
-    id: "MEMO-006",
-    title: "THE 3-WEEK SAAS MVP SPRINT: FROM FIGMA TO PRODUCTION",
-    slug: "saas-mvp-sprint-roadmap",
-    category: "AGILE STRATEGY",
-    readTime: "5 MIN READ",
-    date: "SEP 21, 2026",
-    excerpt:
-      "How forward-thinking founders eliminate months of development agency drag with fixed-scope sprints, daily Discord commits, and full intellectual property handover.",
-    tags: ["SaaS MVP", "Agile Sprints", "Product Roadmap", "Fixed Scope", "Startups"],
-    status: "PUBLISHED",
-    views: 6490,
-    featured: false,
-    authorName: "Marcus Vance",
-  },
+// Convert existing 6 verified articles from journalArticles.ts into full AdminJournalMemo format
+const PUBLISHED_MEMO_VIEWS = [14280, 9840, 8120, 11450, 16730, 6490];
+
+const PUBLISHED_MEMOS: AdminJournalMemo[] = JOURNAL_ARTICLES.map((art, idx) => ({
+  ...art,
+  status: "PUBLISHED" as MemoStatus,
+  views: PUBLISHED_MEMO_VIEWS[idx] || 5000,
+  authorName: art.author.name,
+}));
+
+// Additional rich DRAFT articles for studio staging
+const DRAFT_MEMOS: AdminJournalMemo[] = [
   {
     id: "MEMO-007",
-    title: "EDGE DATABASE SHARDING WITH PRISMA & FLY.IO",
     slug: "edge-database-sharding-prisma-flyio",
+    title: "EDGE DATABASE SHARDING WITH PRISMA & FLY.IO",
+    subtitle:
+      "Architecture patterns for multi-region read replicas, connection multiplexing with PgBouncer, and keeping latency under 15ms globally across 12 distributed edge data centers.",
     category: "BACKEND",
+    categoryColor: "bg-accent-magenta text-white",
     readTime: "10 MIN READ",
     date: "NOV 22, 2026",
     excerpt:
@@ -281,13 +256,75 @@ export const INITIAL_JOURNAL_MEMOS: AdminJournalMemo[] = [
     status: "DRAFT",
     views: 0,
     featured: false,
+    author: {
+      name: "Alex Vance",
+      role: "Lead Distributed Systems Engineer // CodeClovers",
+      handle: "@alex_vance",
+    },
     authorName: "Alex Vance",
+    metrics: [
+      { label: "GLOBAL READ LATENCY", value: "14ms" },
+      { label: "EDGE REGIONS DEPLOYED", value: "12 NODES" },
+      { label: "FAILOVER TIME", value: "< 500MS" },
+      { label: "MAX CONCURRENCY", value: "25,000 req/s" },
+    ],
+    executiveSummary:
+      "High-traffic distributed SaaS platforms often degrade when cross-continental TCP latency delays simple user authentication lookups. By deploying read replicas across Fly.io edge regions and synchronizing state with Litestream and Prisma Accelerate, query responses remain instantaneous worldwide.",
+    keyTakeaways: [
+      "Route read queries to the geographically closest PostgreSQL replica using Cloudflare geolocation headers.",
+      "Buffer write transactions through external message queues to maintain atomic consistency during regional network partitions.",
+      "Enforce sub-10ms query budgets at the CI level to prevent accidental cross-region database joins.",
+    ],
+    tableOfContents: [
+      { id: "geo-latency", label: "01. The Global Edge Latency Penalty" },
+      { id: "read-replicas", label: "02. Multi-Region Read Replica Topologies" },
+      { id: "connection-pooling", label: "03. PgBouncer & Prisma Accelerate" },
+    ],
+    sections: [
+      {
+        id: "geo-latency",
+        heading: "01. THE GLOBAL EDGE LATENCY PENALTY // SPEED OF LIGHT CONSTRAINTS",
+        content: [
+          "No matter how optimized your SQL indexes are, sending a TCP packet from Singapore to a database hosted in us-east-1 takes at least 180ms due to the physical speed of light through optical fiber.",
+          "When an application performs three sequential queries during page rendering, latency immediately exceeds 500ms before HTML generation even begins. The solution is moving read data to the edge.",
+        ],
+        callout: {
+          type: "warning",
+          title: "TRANSACTIONAL INTEGRITY NOTICE",
+          body: "Read replicas can experience replication lag between 5ms and 50ms. Never read immediately after write without reading from the primary node or enforcing read-your-writes session tokens.",
+        },
+      },
+      {
+        id: "read-replicas",
+        heading: "02. MULTI-REGION READ REPLICA TOPOLOGIES",
+        content: [
+          "We configure Fly.io PostgreSQL clusters with automated streaming replication across Frankfurt, Tokyo, London, and Silicon Valley.",
+        ],
+        codeBlock: {
+          filename: "src/lib/edge-db.ts",
+          language: "typescript",
+          code: `import { PrismaClient } from '@prisma/client';
+
+export function getEdgePrismaClient(region: string) {
+  const replicaUrl = process.env[\`DATABASE_URL_\${region.toUpperCase()}\`] 
+    || process.env.DATABASE_URL_PRIMARY;
+
+  return new PrismaClient({
+    datasources: { db: { url: replicaUrl } },
+  });
+}`,
+        },
+      },
+    ],
   },
   {
     id: "MEMO-008",
-    title: "DARK-MODE SWISS GRIDS: ACCESSIBILITY BEYOND PURE BLACK",
     slug: "dark-mode-swiss-grids-accessibility",
+    title: "DARK-MODE SWISS GRIDS: ACCESSIBILITY BEYOND PURE BLACK",
+    subtitle:
+      "Building ergonomic high-contrast dark themes without visual vibration. How to tune 2px borders, paper beige undertones, and tactile focus rings for extended reading.",
     category: "DESIGN SYSTEM",
+    categoryColor: "bg-paper-beige text-ink-black",
     readTime: "7 MIN READ",
     date: "NOV 25, 2026",
     excerpt:
@@ -296,8 +333,45 @@ export const INITIAL_JOURNAL_MEMOS: AdminJournalMemo[] = [
     status: "DRAFT",
     views: 0,
     featured: false,
+    author: {
+      name: "Mia Thorne",
+      role: "Design Systems Principal // CodeClovers",
+      handle: "@mia_thorne",
+    },
     authorName: "Mia Thorne",
+    metrics: [
+      { label: "CONTRAST RATIO", value: "18.5:1" },
+      { label: "EYE FATIGUE INDEX", value: "-48%" },
+      { label: "WCAG AAA COMPLIANCE", value: "100% PASS" },
+      { label: "TOKEN REUSABILITY", value: "100%" },
+    ],
+    executiveSummary:
+      "Many dark mode implementations simply invert hex colors to pure #000000 backgrounds and pure #FFFFFF text, producing harsh halation and severe eye fatigue. Our Swiss Grid dark mode system uses subtle warm zinc undertones (#0C0C0E) paired with tactile 2px borders (#27272A) and vibrant yellow highlights.",
+    keyTakeaways: [
+      "Avoid 100% stark white text on 100% black backgrounds to eliminate optical halation and astigmatism strain.",
+      "Maintain tactile 2px borders even in dark themes using carefully calibrated mid-tone zinc outlines.",
+      "Reserve bold primary accents (such as #FFE600) strictly for interactive buttons and callout indicators.",
+    ],
+    sections: [
+      {
+        id: "halation-problem",
+        heading: "01. THE OPTICAL HALATION PROBLEM",
+        content: [
+          "When users with astigmatism read pure white text on pitch-black displays, light spills into adjacent photoreceptors, creating blurry halos around letters. Softening text to #E4E4E7 retains 18:1 contrast while preventing optical vibration.",
+        ],
+        callout: {
+          type: "pro-tip",
+          title: "COLOR TUNING SECRET",
+          body: "Always infuse a 2% tint of warm yellow or paper beige into your dark mode background palette to match natural eye sensitivity in low-light environments.",
+        },
+      },
+    ],
   },
+];
+
+export const INITIAL_JOURNAL_MEMOS: AdminJournalMemo[] = [
+  ...PUBLISHED_MEMOS,
+  ...DRAFT_MEMOS,
 ];
 
 // -----------------------------------------------------------------------------
@@ -647,7 +721,7 @@ export const INITIAL_PROJECTS: AdminPortfolioProject[] = [
 ];
 
 // -----------------------------------------------------------------------------
-// 6. CLIENT REVIEWS TYPES & DATA
+// 6. CLIENT REVIEWS TYPES & DATA (FULL TESTIMONIAL CRUD PARITY)
 // -----------------------------------------------------------------------------
 
 export interface AdminClientReview {
@@ -663,6 +737,10 @@ export interface AdminClientReview {
   avatarBg?: string;
   contractId: string;
   metricBadge: string;
+  metricDetail?: string;
+  location?: string;
+  category?: string;
+  techStack?: string[];
 }
 
 export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
@@ -680,6 +758,10 @@ export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
     avatarBg: "bg-accent-yellow text-ink-black",
     contractId: "DEPL-4091",
     metricBadge: "+340% CONVERSION RATE",
+    metricDetail: "0.19s LCP Load Time • 100/100 Core Web Vitals",
+    location: "San Francisco, CA",
+    category: "CLOUD ARCHITECTURE",
+    techStack: ["Next.js 14", "RSC", "Vercel Edge", "Tailwind CSS"],
   },
   {
     id: "REV-02",
@@ -695,6 +777,10 @@ export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
     avatarBg: "bg-accent-red text-white",
     contractId: "FIN-8820",
     metricBadge: "$2.4M ARR SCALED",
+    metricDetail: "+410% Inbound Pipeline • Sub-150ms TTFB",
+    location: "New York, NY",
+    category: "B2B FINTECH & PAYMENTS",
+    techStack: ["TypeScript", "Fastify", "PostgreSQL", "Tailwind CSS"],
   },
   {
     id: "REV-03",
@@ -710,6 +796,10 @@ export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
     avatarBg: "bg-ink-black text-accent-yellow",
     contractId: "AI-1049",
     metricBadge: "2.8M MONTHLY QUERIES",
+    metricDetail: "60 FPS Interactive Canvas • 0 Frame Drops",
+    location: "Zurich, Switzerland",
+    category: "AI & DEEP LEARNING",
+    techStack: ["React 19", "WebGL Canvas", "Tailwind CSS", "Zustand"],
   },
   {
     id: "REV-04",
@@ -725,6 +815,10 @@ export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
     avatarBg: "bg-accent-yellow text-ink-black",
     contractId: "COMM-7103",
     metricBadge: "+46.8% CHECKOUT RATE",
+    metricDetail: "62% Bounce Rate Reduction • 2.1x AOV",
+    location: "London, UK",
+    category: "HEADLESS COMMERCE",
+    techStack: ["Next.js App Router", "Shopify API", "Edge Cache", "Tailwind"],
   },
   {
     id: "REV-05",
@@ -740,6 +834,10 @@ export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
     avatarBg: "bg-ink-black text-white",
     contractId: "ROB-3312",
     metricBadge: "< 8MS TELEMETRY LATENCY",
+    metricDetail: "100% Type-Safe • Full GitHub Transfer",
+    location: "Austin, TX",
+    category: "HARDWARE & ROBOTICS",
+    techStack: ["WebSockets", "Rust Edge", "Tailwind CSS", "Next.js 14"],
   },
   {
     id: "REV-06",
@@ -755,11 +853,240 @@ export const INITIAL_CLIENT_REVIEWS: AdminClientReview[] = [
     avatarBg: "bg-accent-red text-white",
     contractId: "MED-9024",
     metricBadge: "+290% DEMO LEADS",
+    metricDetail: "#1 Organic Search Ranking • 100/100 CWV",
+    location: "Boston, MA",
+    category: "HEALTHCARE SAAS",
+    techStack: ["Next.js SSR", "Dynamic JSON-LD", "Cloudflare", "Lighthouse 100"],
   },
 ];
 
 // -----------------------------------------------------------------------------
-// 7. AGENCY SETTINGS TYPES & DATA
+// 7. FAQ MANAGER TYPES & DATA (FROM HOME, ABOUT, PLANS)
+// -----------------------------------------------------------------------------
+
+export type FaqCategory = "GENERAL" | "PRICING" | "ENGINEERING" | "OWNERSHIP";
+export type FaqTargetPage = "HOME" | "ABOUT" | "PLANS" | "ALL";
+export type FaqStatus = "ACTIVE" | "HIDDEN";
+
+export interface AdminFaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  category: FaqCategory;
+  targetPage: FaqTargetPage;
+  highlightBadge: string;
+  status: FaqStatus;
+  order: number;
+}
+
+export const INITIAL_FAQS: AdminFaqItem[] = [
+  // --- HOME PAGE FAQS (From FaqSection.tsx) ---
+  {
+    id: "FAQ-HOM-01",
+    question: "How fast can you deliver a custom Next.js website?",
+    answer:
+      "We operate in focused 2-to-4 week production sprints. From Day 5, you receive a private live staging URL on Vercel updated with every commit, allowing you to test real, functional code rather than waiting weeks for static mockups.",
+    category: "GENERAL",
+    targetPage: "HOME",
+    highlightBadge: "2-4 WEEK SPRINTS",
+    status: "ACTIVE",
+    order: 1,
+  },
+  {
+    id: "FAQ-HOM-02",
+    question: "Do you use templates, WordPress, or site builders like Webflow?",
+    answer:
+      "Never. Every line of code is hand-crafted with 100% custom, type-safe Next.js 14 and Tailwind CSS. We do not use WordPress or drag-and-drop builders, eliminating security vulnerabilities, plugin bloat, and vendor lock-in.",
+    category: "ENGINEERING",
+    targetPage: "HOME",
+    highlightBadge: "100% BESPOKE CODE",
+    status: "ACTIVE",
+    order: 2,
+  },
+  {
+    id: "FAQ-HOM-03",
+    question: "How do you guarantee 100/100 Google Lighthouse and top SEO?",
+    answer:
+      "We achieve perfect performance through strict engineering discipline: React Server Components, zero bloat, sub-300ms global response times via edge caching, and automated Schema.org structured data built directly into your codebase.",
+    category: "ENGINEERING",
+    targetPage: "HOME",
+    highlightBadge: "100/100 LIGHTHOUSE",
+    status: "ACTIVE",
+    order: 3,
+  },
+  {
+    id: "FAQ-HOM-04",
+    question: "What does your pricing look like and how do we start?",
+    answer:
+      "We provide transparent, fixed-scope sprint pricing with zero hidden hourly overages. You can get started immediately by booking a free 30-minute technical architecture audit with our lead engineer.",
+    category: "PRICING",
+    targetPage: "HOME",
+    highlightBadge: "FIXED-SCOPE SPRINT",
+    status: "ACTIVE",
+    order: 4,
+  },
+  {
+    id: "FAQ-HOM-05",
+    question: "Do we own 100% of the code, intellectual property, and design files?",
+    answer:
+      "Yes, completely. Upon project completion and final payment, you receive 100% intellectual property ownership, Figma master design files, and a full administrative transfer of the clean GitHub repository.",
+    category: "OWNERSHIP",
+    targetPage: "HOME",
+    highlightBadge: "100% IP TRANSFER",
+    status: "ACTIVE",
+    order: 5,
+  },
+  {
+    id: "FAQ-HOM-06",
+    question: "What happens after launch? Do you provide ongoing maintenance?",
+    answer:
+      "Yes. We offer dedicated monthly retainers covering 99.99% uptime monitoring, dependency and security updates, performance tuning, and continuous feature sprints as your business scales.",
+    category: "GENERAL",
+    targetPage: "HOME",
+    highlightBadge: "MONTHLY SLA SUPPORT",
+    status: "ACTIVE",
+    order: 6,
+  },
+
+  // --- ABOUT PAGE FAQS (From AboutFaqSection.tsx) ---
+  {
+    id: "FAQ-ABT-01",
+    question: "How do your development sprints work, and when do we see working code?",
+    answer:
+      "We operate in disciplined 2-week sprint cycles. During Week 1, we finalize database contracts, API schemas, and interactive Figma systems. By the end of Week 2, we deliver a functional Next.js staging build hosted on a private preview URL. You test and verify real, working code every single week.",
+    category: "GENERAL",
+    targetPage: "ABOUT",
+    highlightBadge: "SPRINT PROCESS",
+    status: "ACTIVE",
+    order: 7,
+  },
+  {
+    id: "FAQ-ABT-02",
+    question: "Do we get 100% full ownership of the source code and design files?",
+    answer:
+      "Yes, 100%. Upon final sprint milestone completion, full intellectual property, complete GitHub repositories, production Figma source files, database migrations, and deployment credentials are permanently transferred to your team. Zero vendor lock-in, zero monthly licensing fees.",
+    category: "OWNERSHIP",
+    targetPage: "ABOUT",
+    highlightBadge: "IP OWNERSHIP",
+    status: "ACTIVE",
+    order: 8,
+  },
+  {
+    id: "FAQ-ABT-03",
+    question: "Why do you engineer custom Next.js applications instead of using WordPress or Webflow?",
+    answer:
+      "Generic CMS templates rely on dozens of unoptimized plugins that introduce security vulnerabilities, sluggish 3+ second load times, and rigid layout limits. We build on Next.js 14 App Router to deliver sub-300ms page loads, enterprise security, guaranteed 100/100 Core Web Vitals, and infinite scalability.",
+    category: "ENGINEERING",
+    targetPage: "ABOUT",
+    highlightBadge: "ARCHITECTURE",
+    status: "ACTIVE",
+    order: 9,
+  },
+  {
+    id: "FAQ-ABT-04",
+    question: "How do you guarantee a 100/100 Google Core Web Vitals score?",
+    answer:
+      "We engineer speed directly into your codebase. By leveraging React Server Components, zero runtime CSS bloat via Tailwind, automated AVIF image compression, font subset preloading, and edge caching on Vercel and Cloudflare, your pages render instantly with zero layout shifts (CLS 0.00).",
+    category: "ENGINEERING",
+    targetPage: "ABOUT",
+    highlightBadge: "PERFORMANCE",
+    status: "ACTIVE",
+    order: 10,
+  },
+  {
+    id: "FAQ-ABT-05",
+    question: "What happens after product launch? Do you provide ongoing maintenance and engineering?",
+    answer:
+      "Every project includes a 30-day comprehensive post-launch warranty covering any bug fixes, browser updates, and real-time monitoring. Afterward, we offer flexible dedicated retainer sprints for continuous feature expansion, database scaling, and technical SEO monitoring.",
+    category: "GENERAL",
+    targetPage: "ABOUT",
+    highlightBadge: "SUPPORT & SLA",
+    status: "ACTIVE",
+    order: 11,
+  },
+  {
+    id: "FAQ-ABT-06",
+    question: "How do we kick off a project, and what is your onboarding timeline?",
+    answer:
+      "You can book a technical audit or reach out through our contact portal. We review your requirements within 24 hours, deliver a fixed-scope milestone proposal, and typically launch sprint kickoff within 3 to 5 business days.",
+    category: "GENERAL",
+    targetPage: "ABOUT",
+    highlightBadge: "ONBOARDING",
+    status: "ACTIVE",
+    order: 12,
+  },
+
+  // --- PLANS PAGE FAQS (From PlansFaqSection.tsx) ---
+  {
+    id: "FAQ-PLN-01",
+    question: "Are there truly zero hourly surprises, hidden fees, or retainer traps?",
+    answer:
+      "Yes, 100%. Every single project we undertake operates under an ironclad, fixed-scope, flat-fee agreement. You receive a complete scope of work, technical specifications, and a locked delivery date before any contract is signed. No hourly billing, no surprise invoices, and no hostage-ware retainer lock-ins.",
+    category: "PRICING",
+    targetPage: "PLANS",
+    highlightBadge: "FLAT-FEE GUARANTEE",
+    status: "ACTIVE",
+    order: 13,
+  },
+  {
+    id: "FAQ-PLN-02",
+    question: "How do sprint payments and billing milestones work?",
+    answer:
+      "For Starter MVP and Growth Studio tiers, billing is structured as 50% upfront at sprint kickoff and 50% upon final production deployment and QA verification. For Enterprise Scale engagements, we offer milestone-based disbursement aligned with major architectural deliverables.",
+    category: "PRICING",
+    targetPage: "PLANS",
+    highlightBadge: "PAYMENT STRUCTURE",
+    status: "ACTIVE",
+    order: 14,
+  },
+  {
+    id: "FAQ-PLN-03",
+    question: "What happens if we need scope expansion or extra features mid-sprint?",
+    answer:
+      "We protect both your budget and your launch deadline. If new features or pivots emerge during development, we immediately scope them as discrete, modular add-on sprints with transparent flat pricing. You can choose to add them instantly or queue them for Phase 2 without delaying your core production launch.",
+    category: "PRICING",
+    targetPage: "PLANS",
+    highlightBadge: "SCOPE MANAGEMENT",
+    status: "ACTIVE",
+    order: 15,
+  },
+  {
+    id: "FAQ-PLN-04",
+    question: "Do we own 100% of the code, intellectual property, and design systems?",
+    answer:
+      "Yes, absolute 100% transfer. Upon final payment, we execute a complete intellectual property transfer. You receive full administrative rights to your GitHub repository, live Vercel/AWS environments, Figma design system source files, database schemas, and credentials. You are never locked into our studio.",
+    category: "OWNERSHIP",
+    targetPage: "PLANS",
+    highlightBadge: "IP & ASSET OWNERSHIP",
+    status: "ACTIVE",
+    order: 16,
+  },
+  {
+    id: "FAQ-PLN-05",
+    question: "What is covered under the 30-Day Post-Launch Warranty?",
+    answer:
+      "Our post-launch warranty covers 100% of bug fixes, browser regressions, third-party API webhook verification, and performance monitoring. If anything breaks or fails to meet our agreed-upon 100/100 Core Web Vitals benchmark, our senior engineers resolve it immediately at zero cost.",
+    category: "ENGINEERING",
+    targetPage: "PLANS",
+    highlightBadge: "POST-LAUNCH WARRANTY",
+    status: "ACTIVE",
+    order: 17,
+  },
+  {
+    id: "FAQ-PLN-06",
+    question: "How does the Retained SLA ($3,499/mo) work and can it be cancelled?",
+    answer:
+      "Our Retained SLA provides a dedicated engineering allocation every month for continuous feature rollouts, API scaling, security patches, technical SEO audits, and 24/7 uptime monitoring with a 4-hour SLA response time. It operates on a flexible month-to-month basis with zero long-term lock-in—cancel anytime with 14 days notice.",
+    category: "PRICING",
+    targetPage: "PLANS",
+    highlightBadge: "CONTINUOUS SLA",
+    status: "ACTIVE",
+    order: 18,
+  },
+];
+
+// -----------------------------------------------------------------------------
+// 8. AGENCY SETTINGS TYPES & DATA
 // -----------------------------------------------------------------------------
 
 export interface AdminAgencySettings {
@@ -813,7 +1140,7 @@ export const INITIAL_AGENCY_SETTINGS: AdminAgencySettings = {
 };
 
 // -----------------------------------------------------------------------------
-// 8. KPI STATS TYPES & DATA
+// 9. KPI STATS TYPES & DATA
 // -----------------------------------------------------------------------------
 
 export interface AdminKpiStats {
@@ -853,6 +1180,7 @@ export interface AdminFullState {
   plans: AdminPlan[];
   projects: AdminPortfolioProject[];
   reviews: AdminClientReview[];
+  faqs: AdminFaqItem[];
   settings: AdminAgencySettings;
   kpis: AdminKpiStats;
 }
@@ -864,6 +1192,7 @@ export const INITIAL_ADMIN_FULL_STATE: AdminFullState = {
   plans: INITIAL_PLANS,
   projects: INITIAL_PROJECTS,
   reviews: INITIAL_CLIENT_REVIEWS,
+  faqs: INITIAL_FAQS,
   settings: INITIAL_AGENCY_SETTINGS,
   kpis: INITIAL_KPI_STATS,
 };
@@ -967,5 +1296,92 @@ export const SERVICE_STATUS_CONFIG: Record<
     bg: "bg-neutral-300",
     text: "text-neutral-800",
     border: "border-neutral-800",
+  },
+};
+
+/**
+ * Neo-Brutalist Swiss color tokens for FAQ Categories
+ */
+export const FAQ_CATEGORY_CONFIG: Record<
+  FaqCategory,
+  { label: string; bg: string; text: string; border: string }
+> = {
+  GENERAL: {
+    label: "GENERAL PROCESS",
+    bg: "bg-paper-beige",
+    text: "text-ink-black",
+    border: "border-ink-black",
+  },
+  PRICING: {
+    label: "PRICING & SPRINT",
+    bg: "bg-accent-yellow",
+    text: "text-ink-black",
+    border: "border-ink-black",
+  },
+  ENGINEERING: {
+    label: "ENGINEERING & SPEED",
+    bg: "bg-accent-teal",
+    text: "text-ink-black",
+    border: "border-ink-black",
+  },
+  OWNERSHIP: {
+    label: "100% IP OWNERSHIP",
+    bg: "bg-accent-red",
+    text: "text-white",
+    border: "border-ink-black",
+  },
+};
+
+/**
+ * Neo-Brutalist Swiss color tokens for FAQ Target Pages
+ */
+export const FAQ_PAGE_CONFIG: Record<
+  FaqTargetPage,
+  { label: string; bg: string; text: string; border: string }
+> = {
+  HOME: {
+    label: "HOME PAGE",
+    bg: "bg-white",
+    text: "text-ink-black",
+    border: "border-ink-black",
+  },
+  ABOUT: {
+    label: "ABOUT PAGE",
+    bg: "bg-sky-100",
+    text: "text-sky-950",
+    border: "border-sky-950",
+  },
+  PLANS: {
+    label: "PLANS PAGE",
+    bg: "bg-amber-100",
+    text: "text-amber-950",
+    border: "border-amber-950",
+  },
+  ALL: {
+    label: "GLOBAL / ALL",
+    bg: "bg-purple-100",
+    text: "text-purple-950",
+    border: "border-purple-950",
+  },
+};
+
+/**
+ * Neo-Brutalist Swiss color tokens for FAQ Status
+ */
+export const FAQ_STATUS_CONFIG: Record<
+  FaqStatus,
+  { label: string; bg: string; text: string; border: string }
+> = {
+  ACTIVE: {
+    label: "ACTIVE // DISPLAYED",
+    bg: "bg-emerald-300",
+    text: "text-emerald-950",
+    border: "border-ink-black",
+  },
+  HIDDEN: {
+    label: "HIDDEN // DRAFT",
+    bg: "bg-neutral-200",
+    text: "text-neutral-700",
+    border: "border-neutral-700",
   },
 };
