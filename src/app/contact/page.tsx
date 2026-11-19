@@ -1,251 +1,206 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { Suspense } from "react";
+import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { StatusMarquee } from "@/components/StatusMarquee";
-import { ArrowUpRight, CheckCircle2, Send, Sparkles, Mail, MapPin, Clock } from "lucide-react";
-import confetti from "canvas-confetti";
+import { BrutFooter } from "@/components/BrutFooter";
+import { ContactForm } from "@/components/ContactForm";
+import { ContactMap } from "@/components/ContactMap";
+import { ShieldCheck, Zap, Award, Clock, ArrowUpRight } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Direct Architect Dispatch // Start Your Sprint // CodeClovers",
+  description:
+    "Direct senior architect session with guaranteed 4-hour inquiry SLA. No sales bureaucracy, no junior developers. Start your Next.js 14 web app or design system sprint.",
+  alternates: {
+    canonical: "/contact",
+  },
+};
 
 export default function ContactPage() {
-  const [selectedServices, setSelectedServices] = useState<string[]>(["NEXT.JS WEB APP"]);
-  const [selectedBudget, setSelectedBudget] = useState<string>("$5K - $10K");
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    message: "",
-  });
-  const [isSubmitted, setIsSubmitted] = useState(false);
-
-  const toggleService = (service: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
-    );
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      confetti({
-        particleCount: 50,
-        spread: 80,
-        origin: { y: 0.3 },
-        colors: ["#FFE600", "#FF3E1D", "#00C2CB", "#000000"],
-      });
-    } catch {
-      // fallback
-    }
-    setIsSubmitted(true);
-  };
-
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
+      {/* 1. Swiss Modular Header Navigation */}
       <Navbar />
+
+      {/* 2. Real-Time Status Ticker */}
       <StatusMarquee />
 
       <main className="flex-1 w-full">
-        {/* Header */}
-        <section className="p-8 sm:p-14 md:p-16 border-b-2 border-ink-black bg-white paper-ruled-bg text-center">
-          <div className="max-w-6xl mx-auto">
-            <span className="font-mono text-xs font-black uppercase text-ink-black bg-accent-red text-white px-3 py-1 border-2 border-ink-black shadow-brut-sm inline-block mb-4">
-              [ 05 // INITIALIZE COLLABORATION ]
+        {/* ========================================================= */}
+        {/* SECTION 1: CENTERED 3-LINE HERO SECTION                   */}
+        {/* ========================================================= */}
+        <section className="w-full border-b-2 border-ink-black bg-white paper-ruled-bg py-14 sm:py-20 lg:py-24 px-6 sm:px-10 lg:px-16 relative overflow-hidden select-none text-center">
+          <div className="washi-tape -top-2 right-12 rotate-[2deg]" />
+
+          <div className="max-w-6xl xl:max-w-7xl mx-auto flex flex-col items-center text-center">
+            {/* Top Category Badge */}
+            <span className="font-mono text-xs font-black uppercase text-accent-red tracking-widest bg-accent-yellow px-2.5 py-1 border border-ink-black shadow-brut-sm inline-block mb-6">
+              [ 06 // DISPATCH DIRECTIVE ]
             </span>
-            <h1 className="font-display font-black text-5xl sm:text-6xl md:text-7xl uppercase tracking-tighter text-ink-black mb-4">
-              LET&apos;S BUILD SOMETHING ICONIC.
+
+            {/* Centered 3-Line Headline */}
+            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.5rem] uppercase tracking-tight sm:tracking-tighter text-ink-black leading-[0.92] mb-8 text-center w-full">
+              <span className="block whitespace-normal sm:whitespace-nowrap">
+                START YOUR SPRINT.
+              </span>
+              <span className="block whitespace-normal sm:whitespace-nowrap mt-2 sm:mt-3">
+                <span className="bg-accent-yellow px-2.5 sm:px-3.5 py-0.5 border-2 border-ink-black shadow-brut-sm inline-block rotate-[-1deg] mx-1">
+                  DIRECT ARCHITECT
+                </span>
+              </span>
+              <span className="block whitespace-normal sm:whitespace-nowrap mt-2 sm:mt-3">
+                TRANSMISSION.
+              </span>
             </h1>
-            <p className="font-mono text-xs sm:text-sm md:text-base font-bold uppercase text-gray-600 max-w-xl mx-auto">
-              Fill out the project estimator below. We review all technical inquiries within 4 business hours.
+
+            {/* Subtitle */}
+            <p className="font-mono text-base sm:text-lg lg:text-xl font-bold uppercase text-gray-800 max-w-3xl leading-relaxed text-center mx-auto">
+              No sales bureaucracy, no junior developers. Direct senior architect session with guaranteed 4-hour inquiry SLA.
             </p>
           </div>
         </section>
 
-        {/* Content Grid: Form (7 cols) + Direct Agency Coordinates (5 cols) - Full Width */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 w-full border-b-2 border-ink-black bg-white">
-          {/* Form Column */}
-          <div className="lg:col-span-7 p-6 sm:p-10 md:p-14 lg:p-16 border-b-2 lg:border-b-0 lg:border-r-2 border-ink-black bg-white">
-            {isSubmitted ? (
-              <div className="neo-card p-8 bg-accent-yellow text-center flex flex-col items-center">
-                <CheckCircle2 className="w-16 h-16 text-ink-black stroke-[2.5] mb-4" />
-                <h2 className="font-display font-black text-3xl uppercase tracking-tight text-ink-black mb-2">
-                  TRANSMISSION RECEIVED!
-                </h2>
-                <p className="font-mono text-xs font-bold uppercase text-ink-black max-w-md mb-6">
-                  Thank you, {formData.name || "partner"}. An engineering lead will review your brief and reply to {formData.email || "your inbox"} within 4 business hours.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setIsSubmitted(false)}
-                  className="neo-btn px-6 py-2.5 bg-ink-black text-white font-mono text-xs font-black uppercase hover:bg-white hover:text-ink-black"
-                >
-                  SEND ANOTHER BRIEF
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-8 font-mono">
-                {/* Step 1: Select Services */}
-                <div>
-                  <label className="block text-xs font-black uppercase text-gray-700 mb-3">
-                    01 // SELECT SERVICE(S) REQUIRED
-                  </label>
-                  <div className="flex flex-wrap gap-2.5">
-                    {[
-                      "NEXT.JS WEB APP",
-                      "FULL-STACK NODE.JS",
-                      "TECHNICAL SEO OVERHAUL",
-                      "UI/UX DESIGN SYSTEM",
-                      "HEADLESS E-COMMERCE",
-                    ].map((service) => {
-                      const isSelected = selectedServices.includes(service);
-                      return (
-                        <button
-                          key={service}
-                          type="button"
-                          onClick={() => toggleService(service)}
-                          className={`px-3.5 py-2 border-2 border-ink-black text-xs font-black uppercase shadow-brut-sm transition-all ${
-                            isSelected
-                              ? "bg-accent-yellow text-ink-black"
-                              : "bg-paper-beige hover:bg-white text-gray-700"
-                          }`}
-                        >
-                          {isSelected ? "✓ " : "+ "}
-                          {service}
-                        </button>
-                      );
-                    })}
+        {/* ========================================================= */}
+        {/* SECTION 2: CLIENT TRUST DIRECTIVES BAR                    */}
+        {/* ========================================================= */}
+        <section className="w-full border-b-2 border-ink-black bg-[#FAF9F5] select-none">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-ink-black">
+            {/* Directive 1: 100% IP Transfer */}
+            <div className="p-6 sm:p-8 flex flex-col justify-between bg-white hover:bg-neutral-50 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-none bg-accent-yellow border-2 border-ink-black flex items-center justify-center shadow-brut-xs">
+                    <ShieldCheck className="w-5 h-5 text-ink-black stroke-[2.5]" />
                   </div>
+                  <span className="font-mono text-[11px] font-black text-accent-red uppercase tracking-wider">
+                    DIRECTIVE 01
+                  </span>
                 </div>
-
-                {/* Step 2: Select Budget */}
-                <div>
-                  <label className="block text-xs font-black uppercase text-gray-700 mb-3">
-                    02 // ESTIMATED BUDGET TIER
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {["$2K - $5K", "$5K - $10K", "$10K - $25K", "$25K+"].map((tier) => {
-                      const isSelected = selectedBudget === tier;
-                      return (
-                        <button
-                          key={tier}
-                          type="button"
-                          onClick={() => setSelectedBudget(tier)}
-                          className={`p-2.5 border-2 border-ink-black text-center text-xs font-black uppercase shadow-brut-sm transition-all ${
-                            isSelected
-                              ? "bg-accent-teal text-black"
-                              : "bg-paper-beige hover:bg-white text-gray-700"
-                          }`}
-                        >
-                          {tier}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Step 3: Contact Inputs */}
-                <div className="space-y-4">
-                  <label className="block text-xs font-black uppercase text-gray-700">
-                    03 // YOUR DETAILS
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <input
-                        required
-                        type="text"
-                        placeholder="YOUR FULL NAME *"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full p-3.5 border-2 border-ink-black bg-paper-beige focus:bg-white text-xs font-bold text-ink-black focus:outline-none shadow-brut-sm"
-                      />
-                    </div>
-                    <div>
-                      <input
-                        required
-                        type="email"
-                        placeholder="WORK EMAIL ADDRESS *"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full p-3.5 border-2 border-ink-black bg-paper-beige focus:bg-white text-xs font-bold text-ink-black focus:outline-none shadow-brut-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="COMPANY OR CURRENT WEBSITE URL"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full p-3.5 border-2 border-ink-black bg-paper-beige focus:bg-white text-xs font-bold text-ink-black focus:outline-none shadow-brut-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <textarea
-                      required
-                      rows={4}
-                      placeholder="TELL US ABOUT YOUR PROJECT, GOALS & TIMELINE *"
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      className="w-full p-3.5 border-2 border-ink-black bg-paper-beige focus:bg-white text-xs font-bold text-ink-black focus:outline-none shadow-brut-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Submit Action */}
-                <button
-                  type="submit"
-                  className="neo-btn w-full py-4.5 bg-ink-black text-white font-mono font-black text-sm uppercase tracking-wider hover:bg-accent-yellow hover:text-ink-black flex items-center justify-center gap-3"
-                >
-                  <span>TRANSMIT PROJECT BRIEF</span>
-                  <Send className="w-4 h-4" />
-                </button>
-              </form>
-            )}
-          </div>
-
-          {/* Right Agency Coordinates Column */}
-          <div className="lg:col-span-5 p-6 sm:p-10 md:p-12 bg-paper-beige flex flex-col justify-between paper-grid-bg">
-            <div className="space-y-8 font-mono">
-              <div className="neo-card p-6 bg-white">
-                <span className="font-mono text-xs font-black uppercase text-accent-red block mb-1">
-                  DIRECT ACCESS
-                </span>
-                <h3 className="font-display font-black text-2xl uppercase tracking-tight text-ink-black mb-4">
-                  AGENCY COORDINATES
+                <h3 className="font-display font-black text-lg uppercase tracking-tight text-ink-black mb-2">
+                  100% IP &amp; CODE TRANSFER
                 </h3>
-
-                <div className="space-y-4 text-xs font-bold">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-4 h-4 text-ink-black" />
-                    <span>hello@brutdev.agency</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-4 h-4 text-accent-teal" />
-                    <span>AVERAGE REPLY: UNDER 4 HOURS</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-4 h-4 text-accent-magenta" />
-                    <span>GLOBAL DIGITAL STUDIO • UTC TIMEZONE</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="neo-card p-6 bg-accent-yellow">
-                <h4 className="font-display font-black text-lg uppercase text-ink-black mb-2">
-                  CLIENT GUARANTEE
-                </h4>
-                <p className="font-mono text-xs font-bold uppercase text-ink-black leading-relaxed">
-                  Every project is backed by our 100/100 Lighthouse speed guarantee, full clean source code handoff, and zero vendor lock-in.
+                <p className="font-mono text-xs font-bold text-gray-700 leading-relaxed uppercase">
+                  Complete GitHub repository transfer, clean architecture ownership, and zero proprietary agency lock-in or recurring vendor fees.
                 </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-ink-black/20 flex items-center justify-between text-[10px] font-mono font-black uppercase text-gray-500">
+                <span>FULL REPO OWNERSHIP</span>
+                <span>✓ VERIFIED</span>
               </div>
             </div>
 
-            <div className="pt-8 border-t-2 border-ink-black font-mono text-xs font-black uppercase text-gray-500">
-              BRUT.DEV // VERSION 2.6 // ALWAYS IN PRODUCTION
+            {/* Directive 2: 100/100 Lighthouse SLA */}
+            <div className="p-6 sm:p-8 flex flex-col justify-between bg-white hover:bg-neutral-50 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-none bg-accent-teal border-2 border-ink-black flex items-center justify-center shadow-brut-xs">
+                    <Zap className="w-5 h-5 text-ink-black stroke-[2.5]" />
+                  </div>
+                  <span className="font-mono text-[11px] font-black text-accent-red uppercase tracking-wider">
+                    DIRECTIVE 02
+                  </span>
+                </div>
+                <h3 className="font-display font-black text-lg uppercase tracking-tight text-ink-black mb-2">
+                  100/100 LIGHTHOUSE SLA
+                </h3>
+                <p className="font-mono text-xs font-bold text-gray-700 leading-relaxed uppercase">
+                  Sub-second First Contentful Paint, perfect zero Cumulative Layout Shift, and WCAG AAA compliance written into your agreement.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-ink-black/20 flex items-center justify-between text-[10px] font-mono font-black uppercase text-gray-500">
+                <span>CORE WEB VITALS</span>
+                <span>✓ GUARANTEED</span>
+              </div>
+            </div>
+
+            {/* Directive 3: 30-Day Post-Launch Warranty */}
+            <div className="p-6 sm:p-8 flex flex-col justify-between bg-white hover:bg-neutral-50 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-none bg-accent-red text-white border-2 border-ink-black flex items-center justify-center shadow-brut-xs">
+                    <Award className="w-5 h-5 text-white stroke-[2.5]" />
+                  </div>
+                  <span className="font-mono text-[11px] font-black text-accent-red uppercase tracking-wider">
+                    DIRECTIVE 03
+                  </span>
+                </div>
+                <h3 className="font-display font-black text-lg uppercase tracking-tight text-ink-black mb-2">
+                  30-DAY EXTENDED WARRANTY
+                </h3>
+                <p className="font-mono text-xs font-bold text-gray-700 leading-relaxed uppercase">
+                  Comprehensive post-deployment monitoring, instant hotfixes, and dedicated senior engineering advisory for 30 full days.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-ink-black/20 flex items-center justify-between text-[10px] font-mono font-black uppercase text-gray-500">
+                <span>ZERO DEFECT COVERAGE</span>
+                <span>✓ INCLUDED</span>
+              </div>
+            </div>
+
+            {/* Directive 4: 4-Hour Response SLA */}
+            <div className="p-6 sm:p-8 flex flex-col justify-between bg-white hover:bg-neutral-50 transition-colors">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-none bg-ink-black text-white border-2 border-ink-black flex items-center justify-center shadow-brut-xs">
+                    <Clock className="w-5 h-5 text-accent-yellow stroke-[2.5]" />
+                  </div>
+                  <span className="font-mono text-[11px] font-black text-accent-red uppercase tracking-wider">
+                    DIRECTIVE 04
+                  </span>
+                </div>
+                <h3 className="font-display font-black text-lg uppercase tracking-tight text-ink-black mb-2">
+                  4-HOUR RESPONSE SLA
+                </h3>
+                <p className="font-mono text-xs font-bold text-gray-700 leading-relaxed uppercase">
+                  Direct evaluation by our senior engineering principals. Every brief receives an actionable architecture reply within 4 business hours.
+                </p>
+              </div>
+              <div className="mt-4 pt-3 border-t border-ink-black/20 flex items-center justify-between text-[10px] font-mono font-black uppercase text-gray-500">
+                <span>SENIOR PRINCIPAL TRIAGE</span>
+                <span>✓ &lt; 4 HOURS</span>
+              </div>
             </div>
           </div>
         </section>
+
+        {/* ========================================================= */}
+        {/* SECTION 3: INTERACTIVE FORM (7 COLS) + MAP & DOSSIER (5)  */}
+        {/* ========================================================= */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 w-full border-b-2 border-ink-black bg-white">
+          {/* Left Column (7 cols): Interactive Client Form */}
+          <div className="lg:col-span-7 p-6 sm:p-10 md:p-14 lg:p-16 border-b-2 lg:border-b-0 lg:border-r-2 border-ink-black bg-white">
+            <div className="mb-8">
+              <span className="font-mono text-xs font-black uppercase text-accent-red bg-accent-yellow px-2 py-0.5 border border-ink-black shadow-brut-xs inline-block mb-3">
+                PROJECT ESTIMATOR &amp; BRIEF DISPATCH
+              </span>
+              <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-ink-black">
+                TRANSMIT YOUR SPECIFICATIONS
+              </h2>
+              <p className="font-mono text-xs sm:text-sm font-bold uppercase text-gray-600 mt-2">
+                Configure your architectural scope, estimated budget tier, and target timeline. We will review your technical requirements immediately.
+              </p>
+            </div>
+
+            <Suspense
+              fallback={
+                <div className="p-8 border-2 border-ink-black bg-paper-beige font-mono text-xs font-bold uppercase text-gray-600 animate-pulse">
+                  LOADING DISPATCH FORM CONFIGURATION...
+                </div>
+              }
+            >
+              <ContactForm />
+            </Suspense>
+          </div>
+
+          {/* Right Column (5 cols): Interactive Neo-Brutalist Swiss Grid Map & Coordinates */}
+          <div className="lg:col-span-5 flex flex-col border-ink-black bg-paper-beige">
+            <ContactMap />
+          </div>
+        </section>
       </main>
+
+      {/* 4. Neo-Brutalist Footer */}
+      <BrutFooter />
     </div>
   );
 }
