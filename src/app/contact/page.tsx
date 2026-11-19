@@ -1,14 +1,14 @@
-import React, { Suspense } from "react";
+import React from "react";
 import type { Metadata } from "next";
 import { Navbar } from "@/components/Navbar";
 import { StatusMarquee } from "@/components/StatusMarquee";
 import { BrutFooter } from "@/components/BrutFooter";
-import { ContactForm } from "@/components/ContactForm";
-import { ContactMap } from "@/components/ContactMap";
-import { ShieldCheck, Zap, Award, Clock, ArrowUpRight } from "lucide-react";
+import { SimpleContactForm } from "@/components/SimpleContactForm";
+import { FullWidthGoogleMap } from "@/components/FullWidthGoogleMap";
+import { ShieldCheck, Zap, Award, Clock } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Direct Architect Dispatch // Start Your Sprint // CodeClovers",
+  title: "Contact & Project Dispatch // CodeClovers",
   description:
     "Direct senior architect session with guaranteed 4-hour inquiry SLA. No sales bureaucracy, no junior developers. Start your Next.js 14 web app or design system sprint.",
   alternates: {
@@ -19,13 +19,13 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
-      {/* 1. Swiss Modular Header Navigation */}
+      {/* 1. Modular Header Navigation */}
       <Navbar />
 
-      {/* 2. Real-Time Status Ticker */}
+      {/* 2. Live Status Marquee Ticker */}
       <StatusMarquee />
 
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full bg-white">
         {/* ========================================================= */}
         {/* SECTION 1: CENTERED 3-LINE HERO SECTION                   */}
         {/* ========================================================= */}
@@ -61,7 +61,19 @@ export default function ContactPage() {
         </section>
 
         {/* ========================================================= */}
-        {/* SECTION 2: CLIENT TRUST DIRECTIVES BAR                    */}
+        {/* SECTION 2: SIMPLE & CLIENT-FRIENDLY CONTACT FORM          */}
+        {/* ========================================================= */}
+        <section className="w-full bg-white select-none">
+          <SimpleContactForm />
+        </section>
+
+        {/* ========================================================= */}
+        {/* SECTION 3: FULL SECTION WIDTH LIVE GOOGLE MAP             */}
+        {/* ========================================================= */}
+        <FullWidthGoogleMap />
+
+        {/* ========================================================= */}
+        {/* SECTION 4: CLIENT TRUST DIRECTIVES BAR                    */}
         {/* ========================================================= */}
         <section className="w-full border-b-2 border-ink-black bg-[#FAF9F5] select-none">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y-2 sm:divide-y-0 sm:divide-x-2 divide-ink-black">
@@ -162,44 +174,9 @@ export default function ContactPage() {
             </div>
           </div>
         </section>
-
-        {/* ========================================================= */}
-        {/* SECTION 3: INTERACTIVE FORM (7 COLS) + MAP & DOSSIER (5)  */}
-        {/* ========================================================= */}
-        <section className="grid grid-cols-1 lg:grid-cols-12 w-full border-b-2 border-ink-black bg-white">
-          {/* Left Column (7 cols): Interactive Client Form */}
-          <div className="lg:col-span-7 p-6 sm:p-10 md:p-14 lg:p-16 border-b-2 lg:border-b-0 lg:border-r-2 border-ink-black bg-white">
-            <div className="mb-8">
-              <span className="font-mono text-xs font-black uppercase text-accent-red bg-accent-yellow px-2 py-0.5 border border-ink-black shadow-brut-xs inline-block mb-3">
-                PROJECT ESTIMATOR &amp; BRIEF DISPATCH
-              </span>
-              <h2 className="font-display font-black text-3xl sm:text-4xl uppercase tracking-tight text-ink-black">
-                TRANSMIT YOUR SPECIFICATIONS
-              </h2>
-              <p className="font-mono text-xs sm:text-sm font-bold uppercase text-gray-600 mt-2">
-                Configure your architectural scope, estimated budget tier, and target timeline. We will review your technical requirements immediately.
-              </p>
-            </div>
-
-            <Suspense
-              fallback={
-                <div className="p-8 border-2 border-ink-black bg-paper-beige font-mono text-xs font-bold uppercase text-gray-600 animate-pulse">
-                  LOADING DISPATCH FORM CONFIGURATION...
-                </div>
-              }
-            >
-              <ContactForm />
-            </Suspense>
-          </div>
-
-          {/* Right Column (5 cols): Interactive Neo-Brutalist Swiss Grid Map & Coordinates */}
-          <div className="lg:col-span-5 flex flex-col border-ink-black bg-paper-beige">
-            <ContactMap />
-          </div>
-        </section>
       </main>
 
-      {/* 4. Neo-Brutalist Footer */}
+      {/* 5. Neo-Brutalist Footer */}
       <BrutFooter />
     </div>
   );
