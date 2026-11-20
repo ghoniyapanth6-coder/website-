@@ -13,22 +13,58 @@ export const SimpleContactForm: React.FC = () => {
     message: "",
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
     try {
-      confetti({
-        particleCount: 50,
-        spread: 80,
-        origin: { y: 0.4 },
-        colors: ["#FFE600", "#FF3E1D", "#00C2CB", "#000000"],
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || undefined,
+          company: "Direct Web Inquiry",
+          service: formData.subject,
+          message: formData.message.trim(),
+          budget: "$10K - $25K",
+          timeline: "Standard 3-4 Weeks",
+        }),
       });
-    } catch {
-      // fallback
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(
+          errorData?.detail ||
+          errorData?.title ||
+          "Failed to transmit inquiry to server. Please check your connection and try again."
+        );
+      }
+
+      try {
+        confetti({
+          particleCount: 50,
+          spread: 80,
+          origin: { y: 0.4 },
+          colors: ["#FFE600", "#FF3E1D", "#00C2CB", "#000000"],
+        });
+      } catch {
+        // fallback
+      }
+      setIsSubmitted(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error. Please try again.";
+      setErrorMessage(msg);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitted(true);
   };
 
   const copyEmail = () => {
@@ -161,14 +197,32 @@ export const SimpleContactForm: React.FC = () => {
                 />
               </div>
 
+              {/* Error Alert */}
+              {errorMessage && (
+                <div className="p-3 bg-red-50 border-2 border-accent-red text-ink-black text-xs font-mono font-bold flex items-start gap-2 shadow-brut-xs">
+                  <span className="text-accent-red font-black">✕</span>
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-4.5 px-8 bg-ink-black text-white hover:bg-accent-yellow hover:text-ink-black border-2 border-ink-black font-mono font-black text-sm uppercase tracking-wider transition-all duration-150 shadow-brut flex items-center justify-center gap-3 cursor-pointer group"
+                  disabled={isSubmitting}
+                  className="w-full py-4.5 px-8 bg-ink-black text-white hover:bg-accent-yellow hover:text-ink-black disabled:bg-neutral-600 border-2 border-ink-black font-mono font-black text-sm uppercase tracking-wider transition-all duration-150 shadow-brut flex items-center justify-center gap-3 cursor-pointer group disabled:cursor-not-allowed"
                 >
-                  <span>SEND MESSAGE</span>
-                  <Send className="w-4 h-4 text-accent-yellow group-hover:text-ink-black group-hover:translate-x-1 transition-transform" />
+                  {isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>TRANSMITTING INQUIRY...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>SEND MESSAGE</span>
+                      <Send className="w-4 h-4 text-accent-yellow group-hover:text-ink-black group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
                 </button>
                 <div className="flex items-center justify-between text-[11px] font-mono text-gray-500 uppercase mt-2.5">
                   <span>🔒 100% PRIVATE &amp; SECURE</span>

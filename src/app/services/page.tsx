@@ -31,8 +31,77 @@ export const metadata: Metadata = {
 };
 
 export default function ServicesPage() {
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://codeclovers.dev/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Services",
+        item: "https://codeclovers.dev/services",
+      },
+    ],
+  };
+
+  const jsonLdServices = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "Full-Stack Web Development & Design Systems",
+    provider: {
+      "@type": "Organization",
+      name: "CodeClovers",
+      url: "https://codeclovers.dev",
+    },
+    areaServed: "Worldwide",
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Core Engineering Disciplines",
+      itemListElement: [
+        {
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name: "Full-Stack Next.js 14 Web Applications",
+            description: "High-concurrency React 19 RSC, Prisma ORM, and Upstash Redis edge architecture.",
+          },
+        },
+        {
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name: "Neo-Brutalist UI/UX Design Systems",
+            description: "WCAG AAA accessible, high-contrast Swiss grid components and Figma token synchronization.",
+          },
+        },
+        {
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name: "Technical SEO & Core Web Vitals Dominance",
+            description: "Sub-200ms TTFB, automated Schema.org entity graphs, and 100/100 Lighthouse SLA.",
+          },
+        },
+      ],
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none w-full">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdServices) }}
+      />
       {/* 1. Modular Swiss Grid Header */}
       <Navbar />
 

@@ -13,7 +13,9 @@ declare global {
   var mongooseCache: MongooseCache | undefined;
 }
 
-const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/codeclovers";
+function getMongoUri(): string {
+  return process.env.MONGODB_URI || "mongodb://localhost:27017/codeclovers";
+}
 
 let cached: MongooseCache = global.mongooseCache || { conn: null, promise: null };
 
@@ -39,18 +41,20 @@ if (!global.mongooseCache) {
  * @returns Cached or newly established Mongoose instance
  */
 export async function connectToDatabase(): Promise<typeof mongoose> {
-  if (cached.conn) {
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
   }
 
-  if (!cached.promise) {
+  const uri = getMongoUri();
+
+  if (!cached.promise || mongoose.connection.readyState === 0) {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 2500,
-      connectTimeoutMS: 2500,
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(uri, opts).then((mongooseInstance) => {
       return mongooseInstance;
     });
   }

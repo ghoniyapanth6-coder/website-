@@ -17,8 +17,55 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://codeclovers.dev/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Contact",
+        item: "https://codeclovers.dev/contact",
+      },
+    ],
+  };
+
+  const jsonLdContact = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    name: "CodeClovers Studio Contact & Project Dispatch",
+    url: "https://codeclovers.dev/contact",
+    description: "Direct senior architect session with guaranteed 4-hour inquiry SLA.",
+    mainEntity: {
+      "@type": "Organization",
+      name: "CodeClovers",
+      email: "hello@codeclovers.dev",
+      telephone: "+1-415-555-0199",
+      contactPoint: {
+        "@type": "ContactPoint",
+        contactType: "technical sales and project inquiry",
+        email: "hello@codeclovers.dev",
+        availableLanguage: ["English", "Hindi", "Gujarati"],
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdContact) }}
+      />
       {/* 1. Modular Header Navigation */}
       <Navbar />
 

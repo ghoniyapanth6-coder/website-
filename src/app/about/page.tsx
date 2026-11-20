@@ -34,8 +34,66 @@ export const metadata: Metadata = {
 };
 
 export default function AboutPage() {
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://codeclovers.dev/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "About",
+        item: "https://codeclovers.dev/about",
+      },
+    ],
+  };
+
+  const jsonLdFaq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "How do your development sprints work, and when do we see working code?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "We operate in disciplined 2-week sprint cycles. During Week 1, we finalize database contracts, API schemas, and interactive Figma systems. By the end of Week 2, we deliver a functional Next.js staging build hosted on a private preview URL.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do we get 100% full ownership of the source code and design files?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, 100%. Upon final sprint milestone completion, full intellectual property, complete GitHub repositories, production Figma source files, database migrations, and deployment credentials are permanently transferred to your team.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Why do you engineer custom Next.js applications instead of using WordPress or Webflow?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Generic CMS templates rely on dozens of unoptimized plugins that introduce security vulnerabilities, sluggish 3+ second load times, and rigid layout limits. We build on Next.js 14 App Router to deliver sub-300ms page loads, enterprise security, and guaranteed 100/100 Core Web Vitals.",
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
       <Navbar />
       <StatusMarquee />
 

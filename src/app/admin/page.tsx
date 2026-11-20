@@ -286,6 +286,36 @@ export default function AdminPage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Live API Synchronization with MongoDB Backend
+  useEffect(() => {
+    async function syncBackendData() {
+      try {
+        const [inqRes, faqRes, memoRes, serviceRes] = await Promise.all([
+          fetch("/api/inquiries?limit=100").then((r) => r.json()).catch(() => null),
+          fetch("/api/faqs?limit=100").then((r) => r.json()).catch(() => null),
+          fetch("/api/memos?limit=100").then((r) => r.json()).catch(() => null),
+          fetch("/api/services?limit=100").then((r) => r.json()).catch(() => null),
+        ]);
+
+        if (inqRes?.data && Array.isArray(inqRes.data) && inqRes.data.length > 0) {
+          setInquiries(inqRes.data);
+        }
+        if (faqRes?.data && Array.isArray(faqRes.data) && faqRes.data.length > 0) {
+          setFaqs(faqRes.data);
+        }
+        if (memoRes?.data && Array.isArray(memoRes.data) && memoRes.data.length > 0) {
+          setMemos(memoRes.data);
+        }
+        if (serviceRes?.data && Array.isArray(serviceRes.data) && serviceRes.data.length > 0) {
+          setServices(serviceRes.data);
+        }
+      } catch {
+        // Fallback to static initial data gracefully
+      }
+    }
+    syncBackendData();
+  }, []);
+
   // Filtered Inquiries
   const filteredInquiries = useMemo(() => {
     return inquiries.filter((inq) => {
@@ -355,6 +385,14 @@ export default function AdminPage() {
     if (selectedInquiry && selectedInquiry.id === id) {
       setSelectedInquiry((prev) => (prev ? { ...prev, status: newStatus } : null));
     }
+
+    // Background sync to MongoDB API
+    fetch(`/api/inquiries/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus }),
+    }).catch(() => {});
+
     showToast(
       `Inquiry status updated to ${newStatus}`,
       `Lead #${id} moved to ${newStatus} state.`
@@ -364,6 +402,12 @@ export default function AdminPage() {
   const deleteInquiry = (id: string) => {
     setInquiries((prev) => prev.filter((i) => i.id !== id));
     if (selectedInquiry?.id === id) setSelectedInquiry(null);
+
+    // Background sync to MongoDB API
+    fetch(`/api/inquiries/${id}`, {
+      method: "DELETE",
+    }).catch(() => {});
+
     showToast(`Inquiry #${id} Deleted`, "The lead record has been removed.", "info");
   };
 
@@ -390,6 +434,14 @@ export default function AdminPage() {
     };
     setInquiries([newEntry, ...inquiries]);
     setIsNewInquiryModalOpen(false);
+
+    // Background sync to MongoDB API
+    fetch("/api/inquiries", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newEntry),
+    }).catch(() => {});
+
     setNewInquiryForm({
       name: "",
       email: "",

@@ -65,8 +65,69 @@ export default function JournalDetailPage({ params }: PageProps) {
 
   const relatedArticles = JOURNAL_ARTICLES.filter((a) => a.slug !== article.slug).slice(0, 3);
 
+  const jsonLdArticle = {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    headline: article.title,
+    description: article.subtitle || article.excerpt,
+    datePublished: article.date,
+    dateModified: article.date,
+    author: {
+      "@type": "Person",
+      name: article.author.name,
+      jobTitle: article.author.role,
+      url: `https://twitter.com/${article.author.handle.replace("@", "")}`,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "CodeClovers",
+      url: "https://codeclovers.dev",
+      logo: "https://codeclovers.dev/logo.png",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://codeclovers.dev/journal/${article.slug}`,
+    },
+    keywords: article.tags.join(", "),
+    proficiencyLevel: "Expert",
+    articleSection: article.category,
+  };
+
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://codeclovers.dev/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Journal",
+        item: "https://codeclovers.dev/journal",
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: article.title,
+        item: `https://codeclovers.dev/journal/${article.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdArticle) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
       <Navbar />
       <StatusMarquee />
 

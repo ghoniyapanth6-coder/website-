@@ -92,8 +92,66 @@ const PLANS = [
 ];
 
 export default function PlansPage() {
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://codeclovers.dev/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Plans & Pricing",
+        item: "https://codeclovers.dev/plans",
+      },
+    ],
+  };
+
+  const jsonLdFaq = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Are there truly zero hourly surprises, hidden fees, or retainer traps?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, 100%. Every single project we undertake operates under an ironclad, fixed-scope, flat-fee agreement with zero hourly surprises.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How do sprint payments and billing milestones work?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Billing is structured as 50% upfront at sprint kickoff and 50% upon final production deployment and QA verification.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Do we own 100% of the code, intellectual property, and design systems?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, absolute 100% transfer upon final payment. You receive full administrative rights to your GitHub repository and Figma files.",
+        },
+      },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFaq) }}
+      />
       <Navbar />
       <StatusMarquee />
 

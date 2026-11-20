@@ -18,8 +18,59 @@ export const metadata: Metadata = {
 };
 
 export default function JournalPage() {
+  const jsonLdBreadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://codeclovers.dev/",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Journal",
+        item: "https://codeclovers.dev/journal",
+      },
+    ],
+  };
+
+  const jsonLdBlog = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: "CodeClovers Engineering Journal & Technical Memos",
+    url: "https://codeclovers.dev/journal",
+    description: "Production-audited engineering memos, architecture teardowns, Next.js 14 performance patterns, and technical SEO blueprints.",
+    publisher: {
+      "@type": "Organization",
+      name: "CodeClovers",
+      url: "https://codeclovers.dev",
+      logo: "https://codeclovers.dev/logo.png",
+    },
+    blogPost: JOURNAL_ARTICLES.map((article) => ({
+      "@type": "BlogPosting",
+      headline: article.title,
+      url: `https://codeclovers.dev/journal/${article.slug}`,
+      datePublished: article.date,
+      author: {
+        "@type": "Person",
+        name: article.author.name,
+      },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-paper-beige flex flex-col font-sans select-none">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBreadcrumb) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdBlog) }}
+      />
       <Navbar />
       <StatusMarquee />
 

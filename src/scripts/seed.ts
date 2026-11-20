@@ -1,4 +1,6 @@
-import "dotenv/config";
+import * as dotenv from "dotenv";
+dotenv.config({ path: ".env.local" });
+dotenv.config(); // fallback to .env
 import mongoose from "mongoose";
 import { connectToDatabase } from "../lib/db";
 import { INITIAL_ADMIN_FULL_STATE } from "../data/adminMockData";
