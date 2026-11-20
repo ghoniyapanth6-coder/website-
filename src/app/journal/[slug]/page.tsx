@@ -40,18 +40,31 @@ export function generateMetadata({ params }: PageProps): Metadata {
     };
   }
 
+  const seoTitle = article.metaTitle || `${article.title} // CodeClovers Journal`;
+  const seoDesc = article.metaDescription || article.subtitle || article.excerpt;
+  const canonical = article.canonicalUrl || `/journal/${article.slug}`;
+
   return {
-    title: `${article.title} // CodeClovers Journal`,
-    description: article.subtitle,
+    title: seoTitle,
+    description: seoDesc,
+    keywords: article.focusKeywords?.length ? article.focusKeywords : article.tags,
     alternates: {
-      canonical: `/journal/${article.slug}`,
+      canonical: canonical,
     },
     openGraph: {
-      title: article.title,
-      description: article.subtitle,
+      title: seoTitle,
+      description: seoDesc,
       type: "article",
+      url: `https://codeclovers.dev/journal/${article.slug}`,
       publishedTime: article.date,
       authors: [article.author.name],
+      images: article.ogImage ? [{ url: article.ogImage }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seoTitle,
+      description: seoDesc,
+      creator: article.author.handle,
     },
   };
 }
@@ -91,6 +104,16 @@ export default function JournalDetailPage({ params }: PageProps) {
     keywords: article.tags.join(", "),
     proficiencyLevel: "Expert",
     articleSection: article.category,
+    inLanguage: "en-US",
+    isAccessibleForFree: true,
+    speakable: {
+      "@type": "SpeakableSpecification",
+      cssSelector: ["#article-headline", "#executive-summary", ".article-takeaways"],
+    },
+    about: {
+      "@type": "Thing",
+      name: article.category,
+    },
   };
 
   const jsonLdBreadcrumb = {
@@ -178,7 +201,7 @@ export default function JournalDetailPage({ params }: PageProps) {
             </div>
 
             {/* Headline */}
-            <h1 className="font-display font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl uppercase tracking-tighter text-ink-black leading-[0.94] mb-6">
+            <h1 id="article-headline" className="font-display font-black text-3xl sm:text-5xl md:text-6xl lg:text-7xl uppercase tracking-tighter text-ink-black leading-[0.94] mb-6">
               {article.title}
             </h1>
 
@@ -221,7 +244,7 @@ export default function JournalDetailPage({ params }: PageProps) {
         <section className="w-full border-b-2 border-ink-black bg-[#FAF9F5] py-8 sm:py-12 px-6 sm:px-10 lg:px-16">
           <div className="max-w-5xl mx-auto space-y-6">
             {/* Executive Summary */}
-            <div className="p-6 sm:p-8 bg-white border-2 border-ink-black shadow-brut relative">
+            <div id="executive-summary" className="p-6 sm:p-8 bg-white border-2 border-ink-black shadow-brut relative">
               <div className="w-4 h-4 bg-accent-yellow border border-ink-black absolute -top-2 -left-2" />
               <span className="font-mono text-xs font-black uppercase text-accent-red tracking-wider block mb-2">
                 // EXECUTIVE SUMMARY // TL;DR FOR FOUNDERS &amp; CTOS
@@ -232,7 +255,7 @@ export default function JournalDetailPage({ params }: PageProps) {
             </div>
 
             {/* Key Takeaways */}
-            <div className="p-6 sm:p-8 bg-accent-yellow/15 border-2 border-ink-black shadow-brut-xs">
+            <div className="p-6 sm:p-8 bg-accent-yellow/15 border-2 border-ink-black shadow-brut-xs article-takeaways">
               <span className="font-mono text-xs font-black uppercase text-ink-black tracking-wider block mb-3">
                 3 CRITICAL ARCHITECTURAL TAKEAWAYS:
               </span>

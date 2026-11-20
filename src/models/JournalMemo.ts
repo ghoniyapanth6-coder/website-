@@ -63,6 +63,11 @@ export interface IJournalMemo extends Document {
   metrics?: JournalArticleMetric[];
   tableOfContents?: { id: string; label: string }[];
   sections?: JournalArticleSection[];
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeywords?: string[];
+  ogImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -160,6 +165,11 @@ const JournalMemoSchema = new Schema<IJournalMemo>(
     metrics: [MetricSchema],
     tableOfContents: [TocSchema],
     sections: [SectionSchema],
+    metaTitle: { type: String, default: "" },
+    metaDescription: { type: String, default: "" },
+    canonicalUrl: { type: String, default: "" },
+    focusKeywords: [{ type: String }],
+    ogImage: { type: String, default: "" },
   },
   {
     timestamps: true,

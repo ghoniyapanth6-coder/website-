@@ -41,6 +41,11 @@ export interface JournalArticle {
     }[];
     checklist?: string[];
   }[];
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeywords?: string[];
+  ogImage?: string;
 }
 
 export const JOURNAL_ARTICLES: JournalArticle[] = [

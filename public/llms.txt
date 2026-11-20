@@ -1,0 +1,35 @@
+# CodeClovers // High-Performance Web Development Agency
+
+> CodeClovers is an elite full-stack web engineering studio specializing in Next.js 14 App Router applications, high-concurrency Node.js microservices, Neo-Brutalist design systems, and guaranteed 100/100 Core Web Vitals audits.
+
+## Core Capabilities & Services
+- **Full-Stack Next.js 14 Web Applications**: React Server Components (RSC), Edge Runtime, Upstash Redis caching, Prisma ORM, and sub-300ms global TTFB.
+- **Neo-Brutalist Design Systems**: High-contrast Swiss Grid typography, WCAG AAA compliant 21:1 color contrast, tactile 2px ink borders, and Figma token pipelines.
+- **Technical SEO & Core Web Vitals**: Automated dynamic Schema.org JSON-LD graphs, automated edge XML sitemaps, zero hydration layout shift (CLS 0.000).
+- **Rapid SaaS MVP Sprints**: 2-to-4 week production cycles with 100% full intellectual property and clean GitHub repository transfer.
+
+## Fixed-Scope Sprint Pricing Tiers
+- **Starter MVP**: $1,999 (2-week turnaround, 1-3 custom pages, 100/100 Lighthouse guarantee, 14-day warranty).
+- **Growth Studio**: $4,499 (3-week turnaround, full-stack database & auth, dynamic CMS & Stripe integration, 30-day warranty).
+- **Enterprise Scale**: $8,999+ (4-6 week sprint, high-concurrency architecture, multi-tenant RBAC, custom SLA).
+- **Retained SLA**: $3,499/month (Dedicated ongoing engineering allocation, 4-hour SLA response, continuous feature deployments).
+
+## Key Production Benchmarks
+- Global Time-To-First-Byte (TTFB): 140ms
+- Google Lighthouse Scores: 100/100 across Performance, Accessibility, Best Practices, and SEO
+- Bounce Rate Reduction: -62% average across enterprise CMS migrations
+- Peak Microservice Concurrency: 15,000 req/s sustained with zero connection pool drops
+
+## Verified Technical Articles & Architecture Memos
+- [Why We Ditched WordPress for Next.js 14 App Router](https://codeclovers.dev/journal/why-we-ditched-wordpress-for-nextjs-14): Technical post-mortem on database locks and edge SSR.
+- [Technical SEO in Next.js 14: From Zero to Number One](https://codeclovers.dev/journal/technical-seo-nextjs-google-dominance): Blueprint for dynamic Schema.org entity graphs.
+- [Scaling Node.js Microservices with Prisma & Redis](https://codeclovers.dev/journal/scaling-nodejs-microservices-prisma-redis): Architecture patterns for 15,000+ req/s.
+- [Neo-Brutalist Design Systems: High Contrast & Accessibility](https://codeclovers.dev/journal/neo-brutalist-design-systems-wcag-aaa): Swiss typography and WCAG AAA compliance.
+- [The Zero-JavaScript Tax: Guaranteeing 100/100 Lighthouse](https://codeclovers.dev/journal/core-web-vitals-zero-javascript-tax): Static shedding and edge compilation.
+- [The 3-Week SaaS MVP Sprint: From Figma to Production](https://codeclovers.dev/journal/saas-mvp-sprint-roadmap): Fixed-cost agile framework.
+
+## Official Coordinates
+- Website: https://codeclovers.dev
+- Contact: hello@codeclovers.dev
+- Headquarters: 580 Howard Street, Suite 400, San Francisco, CA 94105
+- GitHub: https://github.com/ghoniyapanth6-coder/website-

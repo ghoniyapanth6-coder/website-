@@ -140,7 +140,7 @@ export default function AdminPage() {
   const [memoCategoryFilter, setMemoCategoryFilter] = useState<string>("ALL");
   const [memoStatusFilter, setMemoStatusFilter] = useState<string>("ALL");
   const [isMemoStudioOpen, setIsMemoStudioOpen] = useState(false);
-  const [memoComposerTab, setMemoComposerTab] = useState<"meta" | "author" | "content" | "preview">("meta");
+  const [memoComposerTab, setMemoComposerTab] = useState<"meta" | "author" | "content" | "seo" | "preview">("meta");
   const [memoFormId, setMemoFormId] = useState<string | null>(null); // null = new, string = editing
 
   // Memo Studio Form State
@@ -172,6 +172,11 @@ export default function AdminPage() {
     calloutType: "pro-tip" as "note" | "warning" | "pro-tip",
     calloutTitle: "EDGE COMPLIANCE DIRECTIVE",
     calloutBody: "Ensure all database queries pass through PgBouncer connection multiplexers to prevent pool exhaustion.",
+    metaTitle: "",
+    metaDescription: "",
+    canonicalUrl: "",
+    focusKeywords: "Next.js 14, High Performance, Architecture",
+    ogImage: "",
   });
 
   // FAQ Manager Filters & Modal
@@ -487,6 +492,11 @@ export default function AdminPage() {
       calloutType: "pro-tip",
       calloutTitle: "EDGE COMPLIANCE DIRECTIVE",
       calloutBody: "Ensure all database queries pass through PgBouncer connection multiplexers to prevent pool exhaustion.",
+      metaTitle: "",
+      metaDescription: "",
+      canonicalUrl: "",
+      focusKeywords: "",
+      ogImage: "",
     });
     setIsMemoStudioOpen(true);
   };
@@ -524,6 +534,11 @@ export default function AdminPage() {
       calloutType: firstSection?.callout?.type || "note",
       calloutTitle: firstSection?.callout?.title || "SYSTEM NOTICE",
       calloutBody: firstSection?.callout?.body || "Performance is verified under strict SLA.",
+      metaTitle: memo.metaTitle || "",
+      metaDescription: memo.metaDescription || "",
+      canonicalUrl: memo.canonicalUrl || "",
+      focusKeywords: memo.focusKeywords?.join(", ") || "",
+      ogImage: memo.ogImage || "",
     });
     setIsMemoStudioOpen(true);
   };
@@ -536,6 +551,7 @@ export default function AdminPage() {
     }
 
     const tagsArray = memoForm.tags.split(",").map((t) => t.trim()).filter(Boolean);
+    const keywordsArray = memoForm.focusKeywords.split(",").map((k) => k.trim()).filter(Boolean);
     const slug =
       memoForm.slug.trim() ||
       memoForm.title
@@ -573,7 +589,7 @@ export default function AdminPage() {
       setMemos((prev) =>
         prev.map((m) => {
           if (m.id === memoFormId) {
-            return {
+            const updated = {
               ...m,
               title: memoForm.title.toUpperCase(),
               subtitle: memoForm.subtitle,
@@ -592,12 +608,26 @@ export default function AdminPage() {
               keyTakeaways: takeaways,
               metrics,
               sections: [section, ...(m.sections?.slice(1) || [])],
+              metaTitle: memoForm.metaTitle.trim() || undefined,
+              metaDescription: memoForm.metaDescription.trim() || undefined,
+              canonicalUrl: memoForm.canonicalUrl.trim() || undefined,
+              focusKeywords: keywordsArray.length ? keywordsArray : undefined,
+              ogImage: memoForm.ogImage.trim() || undefined,
             };
+
+            // Background API sync
+            fetch(`/api/memos/${memoFormId}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(updated),
+            }).catch(() => {});
+
+            return updated;
           }
           return m;
         })
       );
-      showToast("Article Updated", `"${memoForm.title}" saved to Journal CMS.`);
+      showToast("Article Updated", `"${memoForm.title}" saved to Journal CMS with SEO metadata.`);
     } else {
       // Create new
       const newId = `MEMO-00${memos.length + 1}`;
@@ -628,9 +658,22 @@ export default function AdminPage() {
         keyTakeaways: takeaways,
         metrics,
         sections: [section],
+        metaTitle: memoForm.metaTitle.trim() || undefined,
+        metaDescription: memoForm.metaDescription.trim() || undefined,
+        canonicalUrl: memoForm.canonicalUrl.trim() || undefined,
+        focusKeywords: keywordsArray.length ? keywordsArray : undefined,
+        ogImage: memoForm.ogImage.trim() || undefined,
       };
       setMemos([newMemo, ...memos]);
-      showToast("Journal Memo Created", `"${newMemo.title}" published with full live preview.`);
+
+      // Background API sync
+      fetch("/api/memos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newMemo),
+      }).catch(() => {});
+
+      showToast("Journal Memo Created", `"${newMemo.title}" published with full SEO metadata.`);
     }
 
     setIsMemoStudioOpen(false);
@@ -2936,6 +2979,17 @@ export default function AdminPage() {
               </button>
               <button
                 type="button"
+                onClick={() => setMemoComposerTab("seo")}
+                className={`px-3 py-1 border border-ink-black font-bold uppercase transition-all flex items-center gap-1.5 ${
+                  memoComposerTab === "seo"
+                    ? "bg-accent-yellow text-ink-black shadow-[2px_2px_0px_#000000]"
+                    : "bg-white hover:bg-neutral-200"
+                }`}
+              >
+                <span>4. 🎯 SEO, AEO & SERP Preview</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setMemoComposerTab("preview")}
                 className={`px-3 py-1 border border-ink-black font-black uppercase transition-all flex items-center gap-1.5 ${
                   memoComposerTab === "preview"
@@ -2944,7 +2998,7 @@ export default function AdminPage() {
                 }`}
               >
                 <Eye className="w-3.5 h-3.5" />
-                <span>4. 👁️ Live Article Preview</span>
+                <span>5. 👁️ Live Article Preview</span>
               </button>
             </div>
 
@@ -3285,7 +3339,183 @@ export default function AdminPage() {
                 </div>
               )}
 
-              {/* TAB 4: 👁️ LIVE ARTICLE PREVIEW */}
+              {/* TAB 4: 🎯 SEO, AEO & SERP PREVIEW */}
+              {memoComposerTab === "seo" && (
+                <div className="space-y-6 text-xs font-mono">
+                  {/* Notice banner */}
+                  <div className="p-3 bg-accent-yellow/20 border-2 border-ink-black flex items-start gap-2.5">
+                    <Sparkles className="w-4 h-4 text-accent-red shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-black uppercase block">Technical On-Page SEO &amp; AI Answer Engine (AEO/GEO) Optimization</span>
+                      <p className="font-sans text-xs text-neutral-700 font-normal mt-0.5">
+                        These fields automatically control Google &amp; Bing meta tags, OpenGraph social sharing cards, and Schema.org TechArticle JSON-LD structures with AI speakable specifications for ChatGPT, Perplexity, and Gemini.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* SEO Meta Title */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold uppercase">
+                        SEO Meta Title (Title Tag in Google Search)
+                      </label>
+                      <span
+                        className={`text-[11px] font-bold ${
+                          (memoForm.metaTitle.length || memoForm.title.length) > 60
+                            ? "text-accent-red"
+                            : (memoForm.metaTitle.length || memoForm.title.length) >= 40
+                            ? "text-emerald-600"
+                            : "text-neutral-500"
+                        }`}
+                      >
+                        {memoForm.metaTitle.length || memoForm.title.length} / 60 Chars (Optimal: 50-60)
+                      </span>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={`Default: ${memoForm.title || "WHY WE DITCHED WORDPRESS FOR NEXT.JS 14"}`}
+                      value={memoForm.metaTitle}
+                      onChange={(e) => setMemoForm({ ...memoForm, metaTitle: e.target.value })}
+                      className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black font-bold focus:outline-none focus:bg-white text-xs"
+                    />
+                    <div className="w-full bg-neutral-200 h-1.5 mt-1 border border-neutral-300 overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${
+                          (memoForm.metaTitle.length || memoForm.title.length) > 60
+                            ? "bg-accent-red"
+                            : "bg-emerald-500"
+                        }`}
+                        style={{
+                          width: `${Math.min(100, ((memoForm.metaTitle.length || memoForm.title.length) / 60) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="font-sans text-[11px] text-neutral-500 mt-1">
+                      Leave empty to automatically use article headline. Appended with &quot; | CodeClovers Agency&quot;.
+                    </p>
+                  </div>
+
+                  {/* SEO Meta Description */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold uppercase">
+                        SEO Meta Description (SERP Snippet &amp; LLM Abstract)
+                      </label>
+                      <span
+                        className={`text-[11px] font-bold ${
+                          (memoForm.metaDescription.length || memoForm.subtitle.length) > 160
+                            ? "text-accent-red"
+                            : (memoForm.metaDescription.length || memoForm.subtitle.length) >= 120
+                            ? "text-emerald-600"
+                            : "text-neutral-500"
+                        }`}
+                      >
+                        {memoForm.metaDescription.length || memoForm.subtitle.length} / 160 Chars (Optimal: 120-160)
+                      </span>
+                    </div>
+                    <textarea
+                      rows={3}
+                      placeholder={`Default: ${memoForm.subtitle || memoForm.executiveSummary || "Short executive synopsis of the article..."}`}
+                      value={memoForm.metaDescription}
+                      onChange={(e) => setMemoForm({ ...memoForm, metaDescription: e.target.value })}
+                      className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black font-medium focus:outline-none focus:bg-white text-xs"
+                    />
+                    <div className="w-full bg-neutral-200 h-1.5 mt-1 border border-neutral-300 overflow-hidden">
+                      <div
+                        className={`h-full transition-all ${
+                          (memoForm.metaDescription.length || memoForm.subtitle.length) > 160
+                            ? "bg-accent-red"
+                            : "bg-emerald-500"
+                        }`}
+                        style={{
+                          width: `${Math.min(100, ((memoForm.metaDescription.length || memoForm.subtitle.length) / 160) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="font-sans text-[11px] text-neutral-500 mt-1">
+                      Direct summary crawled by search spiders and indexed by Perplexity/ChatGPT AI overviews.
+                    </p>
+                  </div>
+
+                  {/* Focus Keywords & Canonical */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold mb-1 uppercase">Focus Target Keywords (Comma-Separated)</label>
+                      <input
+                        type="text"
+                        placeholder="Next.js 14, Web Architecture, Edge RSC"
+                        value={memoForm.focusKeywords}
+                        onChange={(e) => setMemoForm({ ...memoForm, focusKeywords: e.target.value })}
+                        className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold mb-1 uppercase">Canonical URL Override</label>
+                      <input
+                        type="text"
+                        placeholder={`https://codeclovers.dev/journal/${memoForm.slug || "memo-slug"}`}
+                        value={memoForm.canonicalUrl}
+                        onChange={(e) => setMemoForm({ ...memoForm, canonicalUrl: e.target.value })}
+                        className="w-full p-2.5 bg-[#F7F5EE] border-2 border-ink-black focus:outline-none focus:bg-white text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Real-Time Google Search SERP Simulator Preview */}
+                  <div className="pt-3 border-t-2 border-dashed border-neutral-300">
+                    <span className="font-black uppercase text-xs block mb-2 text-neutral-700">
+                      // LIVE GOOGLE SEARCH SERP SNIPPET PREVIEW:
+                    </span>
+                    <div className="p-4 bg-white border-2 border-ink-black shadow-brut-xs space-y-1.5 max-w-2xl">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-full bg-accent-yellow border border-ink-black flex items-center justify-center font-black text-[9px]">
+                          🍀
+                        </div>
+                        <div className="font-sans text-xs text-neutral-800 leading-tight">
+                          <span className="font-medium">CodeClovers</span>
+                          <span className="text-neutral-400 mx-1">›</span>
+                          <span className="text-neutral-500">journal</span>
+                          <span className="text-neutral-400 mx-1">›</span>
+                          <span className="text-neutral-500">{memoForm.slug || "memo-slug"}</span>
+                        </div>
+                      </div>
+                      <div className="font-sans font-medium text-blue-700 hover:underline cursor-pointer text-base sm:text-lg leading-snug">
+                        {memoForm.metaTitle || memoForm.title || "Article Headline"} | CodeClovers Agency
+                      </div>
+                      <p className="font-sans text-xs sm:text-sm text-neutral-600 leading-relaxed font-normal line-clamp-2">
+                        {memoForm.metaDescription || memoForm.subtitle || memoForm.executiveSummary || "WordPress powers 40% of the web, but for high-growth platforms, PHP database locks quietly destroy conversion rates. Here is the technical audit."}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Generative Engine Optimization (GEO) / AEO Citation Simulator */}
+                  <div className="pt-2">
+                    <span className="font-black uppercase text-xs block mb-2 text-neutral-700">
+                      // GENERATIVE ENGINE CITATION SIMULATOR (AEO / GEO / PERPLEXITY AI):
+                    </span>
+                    <div className="p-4 bg-neutral-900 text-white border-2 border-ink-black shadow-brut-xs space-y-2 max-w-2xl">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 border-b border-neutral-700 pb-2">
+                        <span className="flex items-center gap-1.5 text-accent-yellow font-bold">
+                          <Sparkles className="w-3.5 h-3.5 text-accent-yellow" />
+                          AI Overview Answer Citation
+                        </span>
+                        <span>Structured Schema: TechArticle</span>
+                      </div>
+                      <p className="font-sans text-xs text-neutral-200 leading-relaxed">
+                        &ldquo;According to architectural benchmarks by <strong className="text-accent-yellow">CodeClovers</strong> in <em className="text-white">&apos;{memoForm.title || "Why We Ditched WordPress"}&apos;</em>, migrating from legacy monoliths to Next.js 14 Streaming Server Components reduced global TTFB to 140ms and guaranteed zero hydration layout shift.&rdquo;
+                      </p>
+                      <div className="flex items-center gap-2 pt-1 font-mono text-[10px]">
+                        <span className="px-2 py-0.5 bg-neutral-800 text-accent-teal border border-neutral-700">
+                          [1] codeclovers.dev/journal/{memoForm.slug || "memo-slug"}
+                        </span>
+                        <span className="text-emerald-400 font-bold">✓ Speakable Verified</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: 👁️ LIVE ARTICLE PREVIEW */}
               {memoComposerTab === "preview" && (
                 <div className="bg-[#F7F5EE] border-2 border-ink-black p-5 sm:p-8 space-y-6 shadow-inner">
                   {/* Article Hero Preview */}

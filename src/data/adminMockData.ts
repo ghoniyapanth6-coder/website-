@@ -226,6 +226,11 @@ export interface AdminJournalMemo {
   keyTakeaways?: string[];
   tableOfContents?: { id: string; label: string }[];
   sections?: JournalArticleSection[];
+  metaTitle?: string;
+  metaDescription?: string;
+  canonicalUrl?: string;
+  focusKeywords?: string[];
+  ogImage?: string;
 }
 
 // Convert existing 6 verified articles from journalArticles.ts into full AdminJournalMemo format
